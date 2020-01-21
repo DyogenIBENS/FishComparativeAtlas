@@ -1,0 +1,5 @@
+.snakemake/
+PM_*/
+*__pycache__/
+*.pyc
+

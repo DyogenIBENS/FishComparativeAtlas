@@ -1,0 +1,7 @@
+jobname: "PM_Genofish_V3"
+
+species_tree: "../SCORPiOs/data/genofish_v3/GenomicusV3/GenomicusV3_speciesTree.nwk"
+ancestor: "Osteoglossocephalai"
+forest:  "../SCORPiOs/SCORPiOs_Genofish_GenomicusV3_withfilter/SCORPiOs_corrected_forest_5_tags_ok_final.nhx"
+genes: "../SCORPiOs/data/genofish_v3/GenomicusV3/genes/genes.{ref_species}.list.bz2"
+format: "dyogen"

@@ -1,0 +1,7 @@
+jobname: "PM_ens89"
+
+species_tree: "../SCORPiOs/data/data89/Species_tree_ens_v89.nwk"
+ancestor: "Clupeocephala"
+forest:  "../SCORPiOs/SCORPiOs_ensembl89_final/rec_full_SCORPiOs_ensembl89_final.nhx"
+genes: "../SCORPiOs/data/data89/genes/genesST.{ref_species}.bed"
+format: "bed"

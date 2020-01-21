@@ -1,0 +1,13 @@
+6	chr1	203,242,102	//yellow green
+9	chr2	53,161,107	//green
+7	chr3	127,135,143	//gray
+11	chr4	250,245,0	//yellow
+5	chr5	102,51,0/	/brown
+2	chr6	154,0,121	//purple
+10	chr7	255,153,0	//orange
+4	chr8	0,65,255	//blue
+8	chr9	102,204,255	//Sky blue
+12	chr10	255,153,160	//pink
+3	chr11	0,0,0	//black
+1	chr12	255,40,0	//red
+
