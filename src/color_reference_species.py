@@ -23,7 +23,7 @@ def load_nakatani_segments(seg_file):
 
     Returns:
 
-        (dict) : for each defined genomic interval (key) its ancestral chromosome (value)
+        (dict) : for each defined genomic interval (key) its ancestral pre-dup chromosome (value)
     """
 
     dseg = {}
@@ -142,7 +142,7 @@ def load_ohnologs(ancg_file, genes):
     return d_ohno
 
 
-def update_color(dcolor, ohnologs, seg_anc_chr, cutoff):
+def update_color(dcolor, ohnologs, seg_anc_chr, anc_chr, cutoff):
 
     """
     Updates paralogous segments.
@@ -157,6 +157,8 @@ def update_color(dcolor, ohnologs, seg_anc_chr, cutoff):
 
         seg_anc_chr (dict): for each ancestral pre-duplication chromosome (key), all sgements in
                             the modern species that descend from it (value)
+
+        anc_chr (dict): for each genomic interval (key) its ancestral pre-dup chromosome (value)
 
         cutoff (float): minimum proportion of shared paralogous genes to assign paralogous segments
     """
@@ -189,7 +191,7 @@ def update_color(dcolor, ohnologs, seg_anc_chr, cutoff):
             genes_ohno = [k for k in seg_anc_chr if seg_anc_chr[k] == seg]
             min_genes = min(len(genes), len(genes_ohno))
 
-            if counts[seg]/min_genes >= cutoff and seg not in dcolor and seg_anc_chr[seg] == anc:
+            if counts[seg]/min_genes >= cutoff and seg not in dcolor and anc_chr[seg] == anc:
 
                 dcolor[seg] = [anc, letter]
 
@@ -247,7 +249,7 @@ if __name__ == '__main__':
     #we search for segments sharing a decreasing proportion of paralogous genes
     for min_prop in [0.5, 0.4, 0.3, 0.2, 0.1, 0.05]:
         for i in range(10):
-            update_color(COLORS, OHNOLOGS, GENES_ANC_CHR, min_prop)
+            update_color(COLORS, OHNOLOGS, GENES_ANC_CHR, ANC_CHR, min_prop)
 
     GENES = genes_to_segments(GENES, COLORS, transform=True)
 
