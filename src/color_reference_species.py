@@ -9,13 +9,12 @@ from itertools import product
 
 from scripts.synteny.mygenome import Genome
 
-def load_nakatani_segments(seg_file):
+def load_nakatani_segments(seg_file, agg=True):
 
     """
     Loads in a dictionary a segment file as produced by (Nakatani and McLysaght 2017).
     This file lists genomic intervals on a duplicated species genome and their predicted ancestral
     pre-TGD chromosome.
-
 
     Args:
 
@@ -31,25 +30,31 @@ def load_nakatani_segments(seg_file):
     prev_chrom = ''
     prev = ''
     with open(seg_file, 'r') as infile:
+
         for line in infile:
+
             chrom, start, stop, anc = line.strip().split('\t')
 
-            if not prev:
-                prev = (chrom, (int(start), int(stop)))
+            if agg:
+                if not prev:
+                    prev = (chrom, (int(start), int(stop)))
 
-            if (anc == prev_anc and chrom == prev_chrom) or not prev_anc:
-                prev = list(prev)
-                prev.append((int(start), int(stop)))
-                prev = tuple(prev)
+                if (anc == prev_anc and chrom == prev_chrom) or not prev_anc:
+                    prev = list(prev)
+                    prev.append((int(start), int(stop)))
+                    prev = tuple(prev)
+
+                else:
+                    dseg[prev] = prev_anc
+                    prev = (chrom, (int(start), int(stop)))
+
+                prev_anc = anc
+                prev_chrom = chrom
 
             else:
-                dseg[prev] = prev_anc
-                prev = (chrom, (int(start), int(stop)))
+                dseg[(chrom, int(start), int(stop))] = anc
 
-            prev_anc = anc
-            prev_chrom = chrom
-
-        if prev not in dseg:
+        if agg and prev not in dseg:
             dseg[prev] = prev_anc
 
     return dseg
@@ -146,7 +151,6 @@ def update_color(dcolor, ohnologs, seg_anc_chr, anc_chr, cutoff):
 
     """
     Updates paralogous segments.
-
 
     Args:
 
@@ -246,7 +250,7 @@ if __name__ == '__main__':
             USED.append((max_segment))
 
     #we update paralogous segments step by step
-    #we search for segments sharing a decreasing proportion of paralogous genes
+    #we search for segments sharing paralogous genes, iteratively relaxing constraints
     for min_prop in [0.5, 0.4, 0.3, 0.2, 0.1, 0.05]:
         for i in range(10):
             update_color(COLORS, OHNOLOGS, GENES_ANC_CHR, ANC_CHR, min_prop)

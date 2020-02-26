@@ -3,17 +3,22 @@
 
     Example:
         $ python get_post_dup_ancgenes.py -t trees.nhx -d Clupeocephala -s sptree.nwk
-                                                 [-o ancgenes_clup.tsv]
+                                          [-o ancgenes_clup.tsv]
 """
 
+import sys
 import argparse
+from collections import OrderedDict
 from ete3 import Tree
 
 from scripts.synteny.duplicated_families import tag_duplicated_species
 from scripts.trees.speciestree import get_species
+from scripts.trees.orthologs import is_speciation
 from scripts.trees.utilities import read_multiple_objects
 
-def write_post_dup_ancgenes(input_forest, duplicated_species, out, ancg="ancGene_TGD_"):
+
+def write_post_dup_ancgenes(input_forest, duplicated_species, out, outgr=None, ancg="ancGene_TGD_",
+                            add_sp_names=False):
 
     """
     Browses input gene trees and writes an ancGenes file with post-duplication ancestral genes and
@@ -29,43 +34,75 @@ def write_post_dup_ancgenes(input_forest, duplicated_species, out, ancg="ancGene
 
         out (str): path to the output ancgene file
 
+        outgr (list of str, optional): write orthologs in outgroup species
+
         ancg (str, optional): prefix for ancestral gene names
     """
 
     k = 0
 
+    sys.stderr.write(f"Browsing trees...")
+
     with open(input_forest, 'r') as infile, open(out, 'w') as outfile:
 
-        for tree in read_multiple_objects(infile):
+        for nb, tree in enumerate(read_multiple_objects(infile)):
+
+            if nb%1000 == 0 and nb:
+                sys.stderr.write(f"Browsed {nb} trees...")
 
             tree = Tree(tree)
+            leaves = tree.get_leaves()
 
             #find all monphyletic telost groups
-            tag_duplicated_species(tree.get_leaves(), duplicated_species)
+            tag_duplicated_species(leaves, duplicated_species)
 
             #all clades with only teleost genes in the tree
             subtrees = tree.get_monophyletic(values=["Y"], target_attr="duplicated")
 
             for subtree in subtrees:
 
-                teleost_genes = sorted([i.name for i in subtree.get_leaves()])
+                orthologs = OrderedDict()
+                if outgr:
+
+                    #if requested, write orthologs in outgroups
+                    for sp in outgr:
+                        orthologs[sp] = orthologs.get(sp, '')
+                        homologs = {i for i in leaves if i.S==sp}
+                        for homolog in homologs:
+                            lca = tree.get_common_ancestor(subtree, homolog)
+                            if is_speciation(lca):
+                                orthologs[sp]+=','+homolog.name
+
+                        orthologs[sp] = orthologs[sp][1:]
+
+                if add_sp_names:
+                    teleost_genes = sorted([i.name+'_'+i.S for i in subtree.get_leaves()])
+                else:
+                    teleost_genes = sorted([i.name for i in subtree.get_leaves()])
+
                 letter = '_A'
+                ortho = ''
+                if orthologs:
+                    ortho = '\t'+'\t'.join(orthologs.values())
                 if hasattr(subtree, "D"):
 
                     if subtree.D == 'Y':
 
                         for post_dup_group in subtree.children:
 
-                            teleost_genes = sorted([i.name for i in post_dup_group])
-                            outfile.write(ancg+str(k)+letter+'\t'+ ' '.join(teleost_genes)+'\n')
+                            if add_sp_names:
+                                teleost_genes = sorted([i.name+'_'+i.S for i in post_dup_group.get_leaves()])
+                            else:
+                                teleost_genes = sorted([i.name for i in post_dup_group.get_leaves()])
+                            outfile.write(ancg+str(k)+letter+'\t'+ ' '.join(teleost_genes)+ortho+'\n')
                             letter = '_B'
 
                     else:
-                        outfile.write(ancg+str(k)+letter+'\t'+ ' '.join(teleost_genes)+'\n')
+                        outfile.write(ancg+str(k)+letter+'\t'+ ' '.join(teleost_genes)+ortho+'\n')
 
 
                 else:
-                    outfile.write(ancg+str(k)+letter+'\t'+ ' '.join(teleost_genes)+'\n')
+                    outfile.write(ancg+str(k)+letter+'\t'+ ' '.join(teleost_genes)+ortho+'\n')
 
                 k += 1
 
@@ -88,11 +125,16 @@ if __name__ == '__main__':
 
     PARSER.add_argument('-o', '--outfile', help='Output file', required=False, default="out")
 
+    PARSER.add_argument('-outgr', '--outgr_ortho', help='get orthologs for specified outgroup sp.',\
+                        required=False, nargs='+')
+
+    PARSER.add_argument('--add_sp', action='store_true',
+                        help="Add '_' + species name to gene names" )
 
     ARGS = vars(PARSER.parse_args())
 
     #Study species
     DUP_SPECIES = get_species(ARGS["speciesTree"], ARGS["dupSp"])
 
-
-    write_post_dup_ancgenes(ARGS["treesFile"], DUP_SPECIES, ARGS["outfile"])
+    write_post_dup_ancgenes(ARGS["treesFile"], DUP_SPECIES, ARGS["outfile"], ARGS["outgr_ortho"],
+                            add_sp_names=ARGS["add_sp"])

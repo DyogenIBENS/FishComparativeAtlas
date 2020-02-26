@@ -18,12 +18,11 @@ from scripts.synteny.mygenome import Genome
 from homogenize_refs_colors import read_reference_colors
 
 
-def color_ancgenes(colors, genes, ancgenes, output):
+def color_ancgenes(colors, genes, ancgenes, output, propagate=True):
 
     """
     Majority vote of genes from reference species to assign a post-duplication chromosome
     to ancgenes.
-
 
     Args:
 
@@ -36,13 +35,22 @@ def color_ancgenes(colors, genes, ancgenes, output):
 
         output (str): path to the output file to write
 
+        propagate (bool, optional): whether to propagate annotation to ancgene of second copy, when
+                                    no reference species is in its descendants. For instance,
+                                    if one-post TGD ancgene is annotated '12b' through reference
+                                    species votes, its sister will be annotated '12a'.
+
     """
+
+    letter = {"A":"B", "B":"A"}
 
     with open(ancgenes, 'r') as infile, open(output, 'w') as outfile:
 
+        store_votes = {}
+
         for line in infile:
 
-            _, descendants = line.strip().split('\t')
+            anc, descendants = line.strip().split('\t')
             descendants = descendants.split()
 
             votes = {}
@@ -74,11 +82,29 @@ def color_ancgenes(colors, genes, ancgenes, output):
 
                 if not ex_aequo:
 
+                    #TODO remove hard_coded index below
+                    store_votes[anc[12:]] = winner
+
                     outfile.write(line.strip()+'\t'+winner+'\n')
 
                 else:
+                    store_votes[anc[12:]] = "?"
                     outfile.write(line.strip()+'\t?\n')
 
+
+        #propagate to un-annotated second ancgene copy, if its sister is
+        if propagate:
+            infile.seek(0)
+
+            for line in infile:
+                anc, descendants = line.strip().split('\t')
+
+                if anc[12:] not in store_votes:
+                    ohnologue = anc[12:-1] + letter[anc[-1]]
+                    if ohnologue in store_votes and store_votes[ohnologue] != "?":
+                        winner_ohno = store_votes[ohnologue]
+                        winner = winner_ohno[0] + letter[winner_ohno[-1].upper()].lower()
+                        outfile.write(line.strip()+'\t'+winner+'\n')
 
 if __name__ == '__main__':
     PARSER = argparse.ArgumentParser(description=__doc__,
@@ -96,6 +122,8 @@ if __name__ == '__main__':
     PARSER.add_argument('-f', '--genesformat', type=str, required=False,
                         default='bed')
 
+    PARSER.add_argument('-dp', '--dont_propagate', action='store_false')
+
     ARGS = vars(PARSER.parse_args())
 
     GENES = {}
@@ -107,4 +135,4 @@ if __name__ == '__main__':
 
         GENES[ref_col_file] = {g.names[0] for g in Genome(genes_file, ARGS["genesformat"])}
 
-    color_ancgenes(COLORS, GENES, ARGS["ancestral_genes"], ARGS["output"])
+    color_ancgenes(COLORS, GENES, ARGS["ancestral_genes"], ARGS["output"], ARGS["dont_propagate"])
