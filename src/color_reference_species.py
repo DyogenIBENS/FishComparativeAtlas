@@ -178,11 +178,11 @@ def update_color(dcolor, ohnologs, seg_anc_chr, anc_chr, cutoff):
         for gene in genes:
 
             if gene in ohnologs:
-                ohno = ohnologs[gene]
+                ohnos = ohnologs[gene]
                 all_seg = []
-                for o in ohno:
-                    if o in seg_anc_chr:
-                        all_seg.append(seg_anc_chr[o])
+                for ohno in ohnos:
+                    if ohno in seg_anc_chr:
+                        all_seg.append(seg_anc_chr[ohno])
 
                 if len(set(all_seg)) == 1:
                     ohnologous_seg[all_seg[0]] = ohnologous_seg.get(all_seg[0], 0) + 1

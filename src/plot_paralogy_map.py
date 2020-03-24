@@ -13,14 +13,14 @@
 # -t "4R sequence/synteny conflicts --save
 
 import argparse
+import pickle
+
 
 from matplotlib import pyplot as plt
 from matplotlib.collections import BrokenBarHCollection
 from matplotlib.colors import is_color_like
 
 import seaborn as sns
-
-import pickle
 
 from order_chrom import ORDER_CHROM
 
@@ -130,7 +130,7 @@ def draw_colors(dgenes, order, genes_colors, species, out, palette, min_length=3
 
     #compute chrom order by name
     elif sort_by == "names":
-        order = sorted([i for i in dgenes.keys() if type(i)==int])
+        order = sorted([i for i in dgenes.keys() if isinstance(i, int)])
         order = [str(i) for i in order]
 
     i = 0
@@ -141,8 +141,8 @@ def draw_colors(dgenes, order, genes_colors, species, out, palette, min_length=3
     j = 0
 
     #load pre-defined color palette
-    for j in range(len(default_palette)):
-        palette[str(j)] = default_palette[j]
+    for j, color in enumerate(default_palette):
+        palette[str(j)] = color
 
     #Fill the python dict for plot
     for chromosome in dgenes:
@@ -206,11 +206,22 @@ def draw_colors(dgenes, order, genes_colors, species, out, palette, min_length=3
             pickle.dump(to_save, outf)
 
 def load_palette_from_file(input_file):
+
+    """
+    Loads a color palette from file.
+
+    Args:
+        input_file (str): Input file with chromosome name and associated color
+
+    Returns:
+        dict: for each chromosome (key) ist associated color (value)
+    """
+
     palette = {}
     with open(input_file, 'r') as infile:
         for line in infile:
-            chr, col = line.strip().split("\t")
-            palette[chr] = col
+            chrom, col = line.strip().split("\t")
+            palette[chrom] = col
     return palette
 
 
@@ -252,16 +263,17 @@ if __name__ == '__main__':
     if not ARGS["palette_from_file"]:
 
 
-        PALETTE = {'5a': "lime", '5b': "greenyellow", "1a": "red", "1b":"crimson", "9b":"darkorange",\
-               "9a": "orangered", "13a":'#CD00CD', '13b': "#FF32FF", "3a":"darkblue",\
-               "3b":"royalblue", "2a":"black", "2b":"#404040", "8a": "darkgreen",\
-               "8b": "mediumseagreen", "6a":"#707070", "6b":'#B8B8B8', '4a': "brown", "4b": "peru",\
-               "10a": "gold", "10b":"yellow", "11a":"mediumorchid", "11b": "plum",\
-               "12a":"deeppink", "12b":"hotpink", "7a": "deepskyblue", "7b": "lightskyblue"}
+        PALETTE = {'5a': "lime", '5b': "greenyellow", "1a": "red", "1b":"crimson",\
+                   "9b":"darkorange", "9a": "orangered", "13a":'#CD00CD', '13b': "#FF32FF",\
+                   "3a":"darkblue", "3b":"royalblue", "2a":"black", "2b":"#404040",\
+                   "8a": "darkgreen", "8b": "mediumseagreen", "6a":"#707070", "6b":'#B8B8B8',\
+                   '4a': "brown", "4b": "peru", "10a": "gold", "10b":"yellow", "11a":"mediumorchid",
+                   "11b": "plum", "12a":"deeppink", "12b":"hotpink", "7a": "deepskyblue",\
+                   "7b": "lightskyblue"}
     else:
 
         PALETTE = load_palette_from_file(ARGS["palette_from_file"])
-        
+
     GENES = {}
 
     GENOME = Genome(ARGS["genes"], ARGS["genesformat"])

@@ -1,24 +1,27 @@
 """
-Module docstring todo
+
 """
 
 import argparse
 from collections import OrderedDict
-from scripts.synteny.mygenome import Genome
 from itertools import chain
 
+from scripts.synteny.mygenome import Genome
 from color_reference_species import load_nakatani_segments
 
 
 def segments_to_genes(dgenes, dseg):
 
     """
-    Convert genomic intervals to list of genes in interval.
+    Convert genomic intervals in base pairs to list of genes in intervals.
 
     Args:
         dgenes (Genome): genes
 
         dseg (dict): genomic intervals
+
+    Returns:
+        (dict): for each genomic interval (key) the list of genes it harbors (value)
     """
 
     dgenes_seg = OrderedDict()
@@ -40,8 +43,8 @@ def segments_to_genes(dgenes, dseg):
 
                     if gene.end <= interval[1] and gene.beginning >= interval[0]:
 
-                            dgenes_seg[seg] = dgenes_seg.get(seg, [])
-                            dgenes_seg[seg].append(gene.names[0])
+                        dgenes_seg[seg] = dgenes_seg.get(seg, [])
+                        dgenes_seg[seg].append(gene.names[0])
 
     return dgenes_seg
 
@@ -66,7 +69,7 @@ def load_id_conversion(input_file, genes_set):
 
         for line in infile:
 
-            old_id, newest_id, release, score = line.strip().split(', ')
+            old_id, newest_id, _, _ = line.strip().split(', ') #oldid,newid,release,score
 
             if newest_id != '<retired>' and newest_id.split('.')[0] in genes_set:
 
@@ -75,13 +78,12 @@ def load_id_conversion(input_file, genes_set):
     return convert
 
 
-def convert_intervals(dgenes, dconv, dgenes_seg):
+def convert_intervals(dconv, dgenes_seg):
 
     """
-    Converts gene ids in interval to newest version. 
+    Converts gene ids in interval to newest version.
 
     Args:
-        dgenes (Genome): genes
         dconv (dict): conversion dict
         dgenes_seg (dict): gene intervals to convert
 
@@ -120,9 +122,10 @@ def write_converted_seg(dgenes, dgenes_seg_conv, out, dseg=None):
     genes_at_limits = OrderedDict()
     for interval in dgenes_seg_conv:
         if interval in dseg:
-            genes_at_limits[interval] = [dgenes_seg_conv[interval][0], dgenes_seg_conv[interval][-1], dseg[interval]]
+            genes_at_limits[interval] = [dgenes_seg_conv[interval][0],
+                                         dgenes_seg_conv[interval][-1], dseg[interval]]
 
-    #extract genomic coordinates for these genes 
+    #extract genomic coordinates for these genes
     values = set(chain.from_iterable(genes_at_limits.values()))
     genes_at_limits_coord = OrderedDict()
     for chromosome in dgenes.genes_list:
@@ -154,11 +157,11 @@ def write_converted_seg(dgenes, dgenes_seg_conv, out, dseg=None):
 
 
 if __name__ == '__main__':
-    
+
     PARSER = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
 
-    PARSER.add_argument('-g', '--genes',  nargs='+', help='Genes files, first old ids then new',
+    PARSER.add_argument('-g', '--genes', nargs='+', help='Genes files, first old ids then new',
                         required=True)
 
     PARSER.add_argument('-seg', '--ancestral_seg', type=str, help='Nakatani et al. ancestral\
@@ -184,9 +187,9 @@ if __name__ == '__main__':
         ARGS["genesformat"].append(ARGS["genesformat"][0])
 
     GENOMES = []
-    for input_file, format in zip(ARGS["genes"], ARGS["genesformat"]):
+    for in_file, in_format in zip(ARGS["genes"], ARGS["genesformat"]):
 
-        GENOMES.append(Genome(input_file, format))
+        GENOMES.append(Genome(in_file, in_format))
 
     GENES89_SEG = segments_to_genes(GENOMES[0], SEG)
 
@@ -194,6 +197,6 @@ if __name__ == '__main__':
 
     DCONV = load_id_conversion(ARGS["history_ids"], GENES_SET)
 
-    CONV_SEG = convert_intervals(GENOMES[0], DCONV, GENES89_SEG)
+    CONV_SEG = convert_intervals(DCONV, GENES89_SEG)
 
     write_converted_seg(GENOMES[1], CONV_SEG, ARGS["outfile"], SEG)

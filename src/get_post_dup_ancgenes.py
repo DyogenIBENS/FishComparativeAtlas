@@ -67,11 +67,11 @@ def write_post_dup_ancgenes(input_forest, duplicated_species, out, outgr=None, a
                     #if requested, write orthologs in outgroups
                     for sp in outgr:
                         orthologs[sp] = orthologs.get(sp, '')
-                        homologs = {i for i in leaves if i.S==sp}
+                        homologs = {i for i in leaves if i.S == sp}
                         for homolog in homologs:
                             lca = tree.get_common_ancestor(subtree, homolog)
                             if is_speciation(lca):
-                                orthologs[sp]+=','+homolog.name
+                                orthologs[sp] += ','+homolog.name
 
                         orthologs[sp] = orthologs[sp][1:]
 
@@ -91,10 +91,13 @@ def write_post_dup_ancgenes(input_forest, duplicated_species, out, outgr=None, a
                         for post_dup_group in subtree.children:
 
                             if add_sp_names:
-                                teleost_genes = sorted([i.name+'_'+i.S for i in post_dup_group.get_leaves()])
+                                teleost_genes = sorted([i.name+'_'+i.S for i in\
+                                                        post_dup_group.get_leaves()])
                             else:
-                                teleost_genes = sorted([i.name for i in post_dup_group.get_leaves()])
-                            outfile.write(ancg+str(k)+letter+'\t'+ ' '.join(teleost_genes)+ortho+'\n')
+                                teleost_genes = sorted([i.name for i in\
+                                                        post_dup_group.get_leaves()])
+                            outfile.write(ancg+str(k)+letter+'\t'+ ' '.join(teleost_genes)+ortho\
+                                          +'\n')
                             letter = '_B'
 
                     else:
@@ -129,7 +132,7 @@ if __name__ == '__main__':
                         required=False, nargs='+')
 
     PARSER.add_argument('--add_sp', action='store_true',
-                        help="Add '_' + species name to gene names" )
+                        help="Add '_' + species name to gene names")
 
     ARGS = vars(PARSER.parse_args())
 
