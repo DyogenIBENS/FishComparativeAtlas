@@ -205,6 +205,13 @@ def draw_colors(dgenes, order, genes_colors, species, out, palette, min_length=3
         with open(species+"_"+title+'.pkl', "wb") as outf:
             pickle.dump(to_save, outf)
 
+def load_palette_from_file(input_file):
+    palette = {}
+    with open(input_file, 'r') as infile:
+        for line in infile:
+            chr, col = line.strip().split("\t")
+            palette[chr] = col
+    return palette
 
 
 if __name__ == '__main__':
@@ -236,17 +243,25 @@ if __name__ == '__main__':
     PARSER.add_argument('-t', '--title', type=str, required=False,
                         default="Paralogy Map")
 
+    PARSER.add_argument('-pf', '--palette_from_file', type=str, required=False, default='')
+
     PARSER.add_argument('--save', action='store_true')
 
     ARGS = vars(PARSER.parse_args())
 
-    PALETTE = {'5a': "lime", '5b': "greenyellow", "1a": "red", "1b":"crimson", "9b":"darkorange",\
+    if not ARGS["palette_from_file"]:
+
+
+        PALETTE = {'5a': "lime", '5b': "greenyellow", "1a": "red", "1b":"crimson", "9b":"darkorange",\
                "9a": "orangered", "13a":'#CD00CD', '13b': "#FF32FF", "3a":"darkblue",\
                "3b":"royalblue", "2a":"black", "2b":"#404040", "8a": "darkgreen",\
                "8b": "mediumseagreen", "6a":"#707070", "6b":'#B8B8B8', '4a': "brown", "4b": "peru",\
                "10a": "gold", "10b":"yellow", "11a":"mediumorchid", "11b": "plum",\
                "12a":"deeppink", "12b":"hotpink", "7a": "deepskyblue", "7b": "lightskyblue"}
+    else:
 
+        PALETTE = load_palette_from_file(ARGS["palette_from_file"])
+        
     GENES = {}
 
     GENOME = Genome(ARGS["genes"], ARGS["genesformat"])
