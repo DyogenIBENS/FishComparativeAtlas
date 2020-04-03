@@ -1,3 +1,7 @@
+#python src/draw_species_tree_stats.py -i PM_Genofish_GENOMICUSV3_noPeri/out PM_Genofish_GENOMICUSV3/out_new PM_Genofish_GENOMICUSV3_nocorr/out_new  -l "GenomicusV3 + Edition + SCORPiOs" "GenomicusV3 + SCORPiOs" "Genomicus V3" -s ../SCORPiOs/data/genofish_v3/sptree_without_gobidae.nwk -ob PM_Genofish_GENOMICUSV3_noPeri/stats_boxplots.svg -os PM_Genofish_GENOMICUSV3_noPeri/sptree_stats.svg -a Neopterygii -da Osteoglossocephalai
+
+import argparse
+
 from ete3 import Tree, TreeStyle, NodeStyle, TextFace
 
 import seaborn as sns
@@ -5,74 +9,165 @@ import matplotlib.pyplot as plt
 import matplotlib
 import pandas as pd
 
-t = Tree("../SCORPiOs/data/genofish_v3/GenomicusV3/GenomicusV3_speciesTree.nwk", format=1)
-
-neo = t.search_nodes(name="Neopterygii")[0]
-d = {}
-with open("../paralogy_map/PM_Genofish_GENOMICUSV3_nocorr/out_new", "r") as infile:
-    for line in infile:
-        if line.strip():
-            sp = line.split(":")[0]
-            a = float(line.split("(")[1].split("%")[0])
-            d[sp] = a
 
 
-d_cor = {}
-with open("../paralogy_map/PM_Genofish_GENOMICUSV3/out_new", "r") as infile:
-    for line in infile:
-        if line.strip():
-            sp = line.split(":")[0]
-            a = float(line.split("(")[1].split("%")[0])
-            d_cor[sp] = a
+def load_annotation_stats(input_file):
+    """
+    Loads annotation statistics into a dict.
 
-min_a = min(d.values())
-max_a = max(d.values())
+    Args:
 
-cmap = plt.cm.get_cmap('viridis')
-norm = matplotlib.colors.Normalize(vmin=min_a, vmax=max_a)
+    input_file (str): annotation file, as written by src/plot_paraogy_map.py
 
-circular_style = TreeStyle()
-circular_style.show_leaf_name = False
-circular_style.scale = 20
-circular_style.mode = 'c'
-for n in t.traverse():
-    if not n.is_leaf():
-        nstyle = NodeStyle()
-        if n.name != "Osteoglossocephalai":
-            nstyle["fgcolor"] = "lightgrey"
+    Returns
+        dict: for each species, the % of annotated genes in the paralogy Map.
+    """
+
+    stats = {}
+    with open(input_file, "r") as infile:
+        for line in infile:
+            if line.strip():
+                sp = line.split(":")[0]
+                annotated = float(line.split("(")[1].split("%")[0])
+                stats[sp] = annotated
+    return stats
+
+
+def plot_species_tree_with_stats(sptree, stats, out="out_sp.svg", dupanc=None, c_name="viridis",
+                                 anc=None):
+    """
+    """
+
+    tree = Tree(sptree, format=1)
+
+    if anc:
+        tree = tree.search_nodes(name=anc)[0]
+
+    cmap = plt.cm.get_cmap(c_name)
+    min_a, max_a = min(stats.values()), max(stats.values())
+    norm = matplotlib.colors.Normalize(vmin=min_a, vmax=max_a)
+
+    circular_style = TreeStyle()
+    circular_style.show_leaf_name = False
+    circular_style.scale = 20
+    circular_style.mode = 'c'
+    for n in tree.traverse():
+        if not n.is_leaf():
+            nstyle = NodeStyle()
+
+            if (dupanc and n.name != dupanc) or not dupanc:
+                nstyle["fgcolor"] = "lightgrey"
+
+            else:
+                nstyle["fgcolor"] = "lightcoral"
+                nstyle["shape"] = "square"
+            nstyle["size"] = 10
+            n.set_style(nstyle)
+
         else:
-            nstyle["fgcolor"] = "lightcoral"
-            nstyle["shape"] = "square"
-        nstyle["size"] = 10
-        n.set_style(nstyle)
-    else:
-        a = str(d.get(n.name, ''))
-        if a:
-            norm_a = norm(float(a))
-            col = matplotlib.colors.to_hex(cmap(norm_a))
+            annotated = str(stats.get(n.name, ''))
+            if annotated:
+                norm_a = norm(float(annotated))
+                col = matplotlib.colors.to_hex(cmap(norm_a))
+            else:
+                col = 'black'
+
+            n.name = n.name+" "+annotated
+            nstyle = NodeStyle()
+            nstyle["size"] = 0
+            name_face = TextFace(n.name, fgcolor=col)
+            n.add_face(name_face, column=0)
+            n.set_style(nstyle)
+
+    tree.render(out, dpi=200, tree_style=circular_style)
+
+
+def boxplot_stats(datasets, out="out_box.svg"):
+
+    for i, data in enumerate(datasets):
+        label, stats = data
+        df = pd.DataFrame(stats.items(), columns=['Species', "Proportion of genome annotated (%)"])
+        df["Trees"] = label
+        if i > 0:
+            df_all = pd.concat([df_all, df])
         else:
-            col = 'black'
-        n.name = n.name+" "+a
-        nstyle = NodeStyle()
-        nstyle["size"] = 0
-        name_face = TextFace(n.name, fgcolor=col)
-        n.add_face(name_face, column=0)
-        n.set_style(nstyle)
+            df_all = df
+
+    plt.figure(figsize=(3, 5))
+
+    ax = sns.boxplot(data=df_all, y="Proportion of genome annotated (%)", x="Trees", width=0.5)
+
+    ax.set_xticklabels(ax.get_xticklabels(), fontsize=9, rotation=60, ha='right')
+    sns.despine()
+    plt.xlabel("")
+
+    plt.tight_layout()
+    plt.savefig(out, dpi=100)
+    plt.show()
 
 
-# neo.render("PM_stats_species_tree.svg", tree_style=circular_style)
-plt.figure(figsize=(3, 5))
-data1 = pd.DataFrame(d_cor.items(), columns=['Species', "Proportion of genome annotated (%)"])
-data1["Genofish trees"] = "SCORPiOs"
-data2 = pd.DataFrame(d.items(), columns=['Species', "Proportion of genome annotated (%)"])
-data2["Genofish trees"] = "Uncorrected"
-data = pd.concat([data1, data2])
-print(data)
-ax = sns.boxplot(data=data, y="Proportion of genome annotated (%)", x="Genofish trees", width=0.5)
+if __name__ == '__main__':
+
+    PARSER = argparse.ArgumentParser(description=__doc__,
+                                     formatter_class=argparse.RawDescriptionHelpFormatter)
+
+    ## Required ##
+    PARSER.add_argument('-i', '--input', type=str, nargs='+', help='Input annotation statistics,\
+                        several files can be given',
+                        required=True)
+
+    ## Optional ##
+    PARSER.add_argument('-l', '--labels', type=str, nargs='+', help='Labels for input datasets',
+                        required=False, default='')
+
+    PARSER.add_argument('-s', '--sptree', type=str, help="Species tree file, in newick. If not\
+                        given, the species tree isn't plotted.", required=False, default='')
+
+    PARSER.add_argument('-ob', '--output_box', type=str, help='output file for boxplot figure',
+                        required=False, default='out_box.svg')
+
+    PARSER.add_argument('-os', '--output_sp', type=str, help='output file for species tree figure',
+                        required=False, default='out_sp.svg')
+
+    PARSER.add_argument('-a', '--ancestor', type=str, help='Cut species at `ancestor`',
+                        required=False, default='')
+
+    PARSER.add_argument('-da', '--dupancestor', type=str, help='To draw wgd node in species tree',
+                        required=False, default='')
+
+    ARGS = vars(PARSER.parse_args())
+
+    if not ARGS["labels"]:
+        ARGS["labels"] = []
+        for i, _ in enumerate(ARGS["input"]):
+            ARGS["labels"].append(f"Dataset {i}")
+
+    data = []
+    for i, input_data in enumerate(ARGS["input"]):
+        dstats = load_annotation_stats(input_data)
+        lab = ARGS["labels"][i]
+        data.append((lab, dstats))
+
+        if i == 0 and ARGS["sptree"]:
+            plot_species_tree_with_stats(ARGS["sptree"], dstats, out=ARGS["output_sp"],
+                                         dupanc=ARGS["dupancestor"], anc=ARGS["ancestor"])
+
+    boxplot_stats(data, out=ARGS["output_box"])
+
+        
+#     data1["Genofish trees"] = "SCORPiOs"
+# data2 = pd.DataFrame(d.items(), columns=['Species', "Proportion of genome annotated (%)"])
+# data2["Genofish trees"] = "Uncorrected"
+# data = pd.concat([data1, data2])
+# print(data)
 # plt.xlabel(["SCORPiOs corrected forest", "Uncorrected forest"])
 # plt.ylabel("Proportion of genome annotated")
-ax.set_xticklabels(ax.get_xticklabels(), rotation=90)
-plt.tight_layout()
-sns.despine()
-plt.savefig("boxplot_stats_nocorr.svg", dpi=100)
-plt.show()
+# d = load_annotation_stats("../paralogy_map/PM_Genofish_GENOMICUSV3_nocorr/out_new")
+# d = load_annotation_stats("../paralogy_map/PM_Genofish_GENOMICUSV3/out_new")
+
+# "Osteoglossocephalai"
+
+# t = Tree("../SCORPiOs/data/genofish_v3/GenomicusV3/GenomicusV3_speciesTree.nwk", format=1)
+# neo = t.search_nodes(name="Neopterygii")[0]
+
+
