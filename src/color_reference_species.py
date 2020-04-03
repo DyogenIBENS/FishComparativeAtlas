@@ -18,7 +18,9 @@ def load_nakatani_segments(seg_file, agg=True):
 
     Args:
 
-        (str) : path to the input file
+        seg_file (str) : path to the input file
+        agg (bool, optional): aggregate in the same dict entry several contiguous segments from the
+                              same predicted ancestral chromosome
 
     Returns:
 
