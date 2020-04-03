@@ -3,5 +3,4 @@ PM_*/
 *__pycache__/
 *.pyc
 interval_conversion/
-zfin/*
-fig/*
+analysis/*
