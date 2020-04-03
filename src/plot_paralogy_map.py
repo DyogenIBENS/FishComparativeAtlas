@@ -1,6 +1,8 @@
 """
-    Script to draw a modern duplicated genome after assigning its genes to a post-duplication
-    chromosome.
+    Script to draw and color a genome according to an input classification.
+    For instance, it can be used to draw post-duplication chromosomes on modern species.
+    The classification provided in input should give a color or class to genes of the species to
+    draw. Several input format and plot parameters can be given.
 
     Example:
         $ python plot_paralogy_map.py -c colored_ancgenes.tsv -g genes.Oryzias.latipes.list.bz2
@@ -80,7 +82,13 @@ def read_ancgenes_colors(file_anc_colors, genes, anc=False, species=''):
                     genes_anc[gene] = anc_chr
                     pred += 1
 
+    if anc:
+        pred = len(genes_anc)
+
+
     frac = pred/float(tot) * 100
+
+
 
     print(species+': '+str(pred)+' annotated genes ('+str(round(frac, 2))+'%)\n')
 
@@ -95,7 +103,7 @@ def draw_colors(dgenes, order, genes_colors, species, out, palette, min_length=3
 
 
     Args:
-        dgens (Genome.genes_list): genome to plot
+        dgenes (Genome.genes_list): genome to plot
 
         order (dict): pre-assigned chromosomes order based on Figures in Nakatani and McLysaght
 
@@ -141,8 +149,9 @@ def draw_colors(dgenes, order, genes_colors, species, out, palette, min_length=3
     j = 0
 
     #load pre-defined color palette
-    for j, color in enumerate(default_palette):
-        palette[str(j)] = color
+    if not palette:
+        for j, color in enumerate(default_palette):
+            palette[str(j)] = color
 
     #Fill the python dict for plot
     for chromosome in dgenes:
@@ -150,16 +159,13 @@ def draw_colors(dgenes, order, genes_colors, species, out, palette, min_length=3
             chrom = str(chromosome)
             chrom = chrom.replace("group", "")
             name = gene.names[0]
-
             col = 'whitesmoke'
             if name in genes_colors:
 
                 col = ''.join(genes_colors[name])
-
                 assert col in palette or is_color_like(col), f'Cannot understand color {col}'
 
                 if col in palette:
-
                     col = palette[col]
 
             xranges.append((i, 1))
@@ -229,34 +235,51 @@ if __name__ == '__main__':
     PARSER = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
 
-    PARSER.add_argument('-c', '--color', type=str, help='Input file', required=True)
+    ## Required ##
+    PARSER.add_argument('-c', '--color', type=str, help='Input file with classification',
+                        required=True)
 
-    PARSER.add_argument('-g', '--genes', type=str, help='Genes file', required=True, default='')
+    PARSER.add_argument('-g', '--genes', type=str, help='Genes file of the target species',
+                        required=True, default='')
 
+
+    ## Optional ##
     PARSER.add_argument('-o', '--output_file', type=str, help='output file', required=False,
                         default='out.svg')
 
-    PARSER.add_argument('-s', '--species_name', type=str, required=False, default='')
+    PARSER.add_argument('-s', '--species_name', type=str, help="Name of the species for plot title",
+                        required=False, default='')
 
-    PARSER.add_argument('-f', '--genesformat', type=str, required=False,
-                        default='bed')
+    PARSER.add_argument('-f', '--genesformat', type=str, required=False, help="Format of the genes\
+                        file either bed or dyogen", default='bed')
 
-    ## plot-related options
-    PARSER.add_argument('-maxC', '--max_chr', type=int, required=False,
-                        default=30)
+    PARSER.add_argument('-maxC', '--max_chr', type=int, required=False, help="Max number of\
+                        chromosomes to plot", default=30)
 
-    PARSER.add_argument('-minL', '--min_length', type=int, required=False,
-                        default=30)
+    PARSER.add_argument('-minL', '--min_length', type=int, required=False, help="Minimum length for\
+                        a chromosome or scaffold to be plotted", default=30)
 
-    PARSER.add_argument('-sort', '--sort_by', type=str, required=False,
-                        default="size")
+    PARSER.add_argument('-sort', '--sort_by', type=str, required=False, help="Order for chromosomes\
+                        can be 'size' or 'names'", default="size")
 
-    PARSER.add_argument('-t', '--title', type=str, required=False,
-                        default="Paralogy Map")
+    PARSER.add_argument('-t', '--title', type=str, required=False, help="Plot title, species name\
+                        will be appended, if provided", default="Paralogy Map")
 
-    PARSER.add_argument('-pf', '--palette_from_file', type=str, required=False, default='')
+    PARSER.add_argument('-pf', '--palette_from_file', type=str, help= "Redefine color palette wth a\
+                        tab-delimited file, giving a class-color correspondence",
+                        required=False, default='')
 
-    PARSER.add_argument('--save', action='store_true')
+    PARSER.add_argument('--save', action='store_true', help="If specified, pickles the dictionnary\
+                        used for plot")
+
+    PARSER.add_argument('--singlesp', action='store_true', help="Specifies that input is not in \
+                        ancGenes format but contains only genes of the target species.")
+
+    PARSER.add_argument('-gid', '--gene_index', type=int, required=False, default=0, help="Use in\
+                        conjonction with --singlesp, specify column with gene names.\
+                        Classes are always expected to be the last column")
+
+
 
     ARGS = vars(PARSER.parse_args())
 
@@ -270,6 +293,14 @@ if __name__ == '__main__':
                    '4a': "brown", "4b": "peru", "10a": "gold", "10b":"yellow", "11a":"mediumorchid",
                    "11b": "plum", "12a":"deeppink", "12b":"hotpink", "7a": "deepskyblue",\
                    "7b": "lightskyblue"}
+
+        #use color of "a" genes to serve as colors for pre-duplication chr
+        keys = set(PALETTE.keys())
+        for key in keys:
+            if key[-1] == 'a' and key != '9a':
+                PALETTE[key[:-1]] = PALETTE[key]
+            elif key == '9b':
+                PALETTE[key[:-1]] = PALETTE[key]
     else:
 
         PALETTE = load_palette_from_file(ARGS["palette_from_file"])
@@ -279,7 +310,8 @@ if __name__ == '__main__':
     GENOME = Genome(ARGS["genes"], ARGS["genesformat"])
     GENES = {g.names[0] for g in GENOME}
 
-    GENES_COL = read_ancgenes_colors(ARGS["color"], GENES, species=ARGS["species_name"])
+    GENES_COL = read_ancgenes_colors(ARGS["color"], GENES, anc=ARGS['singlesp'],
+                                     species=ARGS["species_name"])
 
     draw_colors(GENOME.genes_list, ORDER_CHROM, GENES_COL, ARGS["species_name"],
                 ARGS["output_file"], PALETTE, min_length=ARGS["min_length"],
