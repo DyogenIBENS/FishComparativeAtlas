@@ -4,3 +4,4 @@ PM_*/
 *.pyc
 interval_conversion/
 analysis/*
+config
