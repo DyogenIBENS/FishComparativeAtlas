@@ -3,32 +3,33 @@ import os
 
 from scripts.trees import speciestree as spt
 
-## TODO: PUT SEGMENTS in config
-
 #################################################################################################
-#Runs in the conda env paralogy_map + path to SCORPiOs src should be appended to python path    #
-#Dependencies (see env file) = snakemake, ete3, matpotlib and seaborn                           #
+#Runs in the conda env paralogy_map + path to SCORPiOs scripts should be appended to python path #
+#Dependencies (see env file) = snakemake, ete3, matpotlib and seaborn                            #
 #################################################################################################
 
 DUPLICATED_SPECIES = spt.get_species(config["species_tree"], config["ancestor"])
 REF_SPECIES = ["Oryzias.latipes", "Gasterosteus.aculeatus", "Tetraodon.nigroviridis", "Danio.rerio"]
-SEGMENTS = "data/MacrosyntenyTGD/Results/K=13/{ref_species}.seg.txt"
-SEGMENTS_OK = "data/MacrosyntenyTGD/Results/K=13/{ref_species}_ok.seg.txt"
+SEGMENTS = config.get("seg", "data/MacrosyntenyTGD/Results/K=13/{ref_species}.seg.txt")
+SEGMENTS_OK = config.get("seg_ok", "data/MacrosyntenyTGD/Results/K=13/{ref_species}_ok.seg.txt")
 GENES = config["genes"]
 
-#TODO: more stderr prints
-#OPTIMIZE:(?) total run 75 teleost 8 minutes on 14 cores, pyflame src to see where to gain time
 
 rule all:
     """
     Target of the workflow:
     an .svg image for each dup species, with their genome colored by post-duplication chromosomes
     """
-    input: expand(config["jobname"]+"/{dup_species}_ParalogyMap.svg", dup_species=DUPLICATED_SPECIES)
+    #input: expand(config["jobname"]+"/{dup_species}_ParalogyMap.svg", dup_species=DUPLICATED_SPECIES)
+    input: config["jobname"]+"/sptree_stats.svg",
+           config["jobname"]+"/box_stats.svg"
 
 
 #TODO: are non-zero exit status captured here?
 rule convert_intervals:
+    """
+    Maps intervals of current assembly to intervals of previous assembly used in Nakatani and McLysaght.
+    """
     input: s = SEGMENTS, g = GENES
     output: SEGMENTS_OK
     run:
@@ -51,6 +52,7 @@ rule convert_intervals:
         else:
             os.system("cp "+input[0]+" "+output[0])
 
+
 rule extract_duplicated_ancGenes:
     """
     Extracts all post-duplication ancgenes in the input gene trees.
@@ -66,7 +68,7 @@ rule extract_duplicated_ancGenes:
 rule color_each_reference:
     """
     Identifies paralogous duplicated segments within each of the 4 reference species.
-    Uses paralogous genes in input gene trees.
+    Uses paralogous genes in input gene trees and pre-TGD segments.
     """
     input: segments = SEGMENTS_OK, genes = GENES, ancGenes = config["jobname"]+"/TGD_ancGenes.tsv"
     output: config["jobname"]+"/{ref_species}_colors.txt"
@@ -86,7 +88,7 @@ def get_ref_colors2(wildcards):
 
 
 #TODO: touching a single output was simpler to implement in snakemake but we can do better
-rule homogenize_reference_ab:
+rule homogenize_references_ab:
     """
     Homogenizes nomenclature of paralogous segments within each references to be consistent across
     species (i.e orthologous segments should have the same name).
@@ -94,7 +96,7 @@ rule homogenize_reference_ab:
     input: ref_colors = get_ref_colors, genes = get_genes,
            ancGenes = config["jobname"]+"/TGD_ancGenes.tsv"
     output: config["jobname"]+"/touched_file"
-    params: guide = "Oryzias.latipes"
+    params: guide = "Gasterosteus.aculeatus"
     shell:"""
     python src/homogenize_refs_colors.py -i {input.ref_colors} -ag {input.ancGenes}\
                                          -guide_sp {params.guide} -g {input.genes}\
@@ -106,7 +108,7 @@ rule consensus_color_ancGene:
     Assigns, through a majority vote of the 4 reference species descendant genes, an ancestral
     post-duplication chromosome to each ancestral gene.
     """
-    input: ref_colors = config["jobname"]+"/touched_file",\
+    input: ref_colors = config["jobname"]+"/touched_file",
            genes = get_genes, ancGenes = config["jobname"]+"/TGD_ancGenes.tsv"
     output: config["jobname"]+"/colored_TGD_ancGenes.tsv"
     params: ref_colors = get_ref_colors2
@@ -120,10 +122,50 @@ rule draw_paralogy_map:
     Draws the genome of each duplicated species colored by ancestral post-duplication chromosomes,
     using ancestral genes annotated in the previous rules.
     """
-    input: colors = config["jobname"]+"/colored_TGD_ancGenes.tsv",\
+    input: colors = config["jobname"]+"/colored_TGD_ancGenes.tsv",
            genes = GENES.replace('{ref_species}', '{dup_species}')
-    output: config["jobname"]+"/{dup_species}_ParalogyMap.svg"
+
+    output: plot = report(config["jobname"]+"/{dup_species}_ParalogyMap.svg",category="Paralogy Maps"),\
+                   # caption="Paralogy map for {wildcards.dup_species}",\
+            stats = temp(config["jobname"]+"/{dup_species}_out_stats.txt")
+
     shell:"""
-    python src/plot_paralogy_map.py -c {input.colors} -g {input.genes} -o {output}\
-                                    -s {wildcards.dup_species} -f {config[format]}
+    python src/plot_paralogy_map.py -c {input.colors} -g {input.genes} -o {output.plot}\
+                                    -s {wildcards.dup_species} -f {config[format]}\
+                                    -os {output.stats}
     """
+
+def get_plots(wildcards):
+    return expand(config["jobname"]+"/{dup_species}_ParalogyMap.svg", dup_species=DUPLICATED_SPECIES)
+
+def get_stats(wildcards):
+    return expand(config["jobname"]+"/{dup_species}_out_stats.txt", dup_species=DUPLICATED_SPECIES)
+
+rule stats:
+    input: st = get_stats,fig = get_plots
+
+    output: config["jobname"]+"/out_stats.txt"
+
+    shell:"""
+    cat {input.st} > {output}
+    """
+
+rule plot_annotation_statistics:
+    """
+    Plots proportion of genome annotated.
+    """
+    input: stats = config["jobname"]+"/out_stats.txt",
+
+    output: boxplots = report(config["jobname"]+"/box_stats.svg", category="Annotation statistics"),\
+                   # caption="Proportion of genomes annotated and comparisons with previous results",\
+            sptree = report(config["jobname"]+"/sptree_stats.svg", category="Annotation statistics")
+                   # caption="Visualizaiton of annotation statistics on the species tree",\
+                   
+    shell:"""
+    python src/draw_species_tree_stats.py -i {input.stats} {config[comparisons]}\
+    -l {config[labels]} -s {config[species_tree]} -ob {output.boxplots}\
+    -os {output.sptree} -a {config[prune_ancestor]} -da {config[ancestor]}
+    """
+
+# rule compare_zfin:
+# rule plot_zfin:

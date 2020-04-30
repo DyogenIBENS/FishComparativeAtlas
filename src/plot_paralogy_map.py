@@ -29,7 +29,7 @@ from order_chrom import ORDER_CHROM
 from scripts.synteny.mygenome import Genome
 
 
-def read_ancgenes_colors(file_anc_colors, genes, anc=False, species=''):
+def read_ancgenes_colors(file_anc_colors, genes, anc=False, species='', out=''):
 
     """
     Loads predicted colors (PREDUP_CHROM+'_'+POSTDUP_LETTER) for all genes of the considered
@@ -89,8 +89,12 @@ def read_ancgenes_colors(file_anc_colors, genes, anc=False, species=''):
     frac = pred/float(tot) * 100
 
 
-
-    print(species+': '+str(pred)+' annotated genes ('+str(round(frac, 2))+'%)\n')
+    st = species+': '+str(pred)+' annotated genes ('+str(round(frac, 2))+'%)\n'
+    if out:
+        with open(out, 'w') as outfile:
+            outfile.write(st)
+    else:
+        print(st)
 
     return genes_anc
 
@@ -265,8 +269,8 @@ if __name__ == '__main__':
     PARSER.add_argument('-t', '--title', type=str, required=False, help="Plot title, species name\
                         will be appended, if provided", default="Paralogy Map")
 
-    PARSER.add_argument('-pf', '--palette_from_file', type=str, help= "Redefine color palette wth a\
-                        tab-delimited file, giving a class-color correspondence",
+    PARSER.add_argument('-pf', '--palette_from_file', type=str, help="Redefine color palette wth a"
+                        " tab-delimited file, giving a class-color correspondence",
                         required=False, default='')
 
     PARSER.add_argument('--save', action='store_true', help="If specified, pickles the dictionnary\
@@ -279,6 +283,8 @@ if __name__ == '__main__':
                         conjonction with --singlesp, specify column with gene names.\
                         Classes are always expected to be the last column")
 
+    PARSER.add_argument('-os', '--stats_out', type=str, required=False, default='', help="File to\
+                        dump stats")
 
 
     ARGS = vars(PARSER.parse_args())
@@ -295,8 +301,8 @@ if __name__ == '__main__':
                    "7b": "lightskyblue"}
 
         #use color of "a" genes to serve as colors for pre-duplication chr
-        keys = set(PALETTE.keys())
-        for key in keys:
+        KEYS = set(PALETTE.keys())
+        for key in KEYS:
             if key[-1] == 'a' and key != '9a':
                 PALETTE[key[:-1]] = PALETTE[key]
             elif key == '9b':
@@ -311,7 +317,7 @@ if __name__ == '__main__':
     GENES = {g.names[0] for g in GENOME}
 
     GENES_COL = read_ancgenes_colors(ARGS["color"], GENES, anc=ARGS['singlesp'],
-                                     species=ARGS["species_name"])
+                                     species=ARGS["species_name"], out=ARGS["stats_out"])
 
     draw_colors(GENOME.genes_list, ORDER_CHROM, GENES_COL, ARGS["species_name"],
                 ARGS["output_file"], PALETTE, min_length=ARGS["min_length"],

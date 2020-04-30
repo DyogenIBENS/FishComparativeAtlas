@@ -122,8 +122,12 @@ def write_converted_seg(dgenes, dgenes_seg_conv, out, dseg=None):
     genes_at_limits = OrderedDict()
     for interval in dgenes_seg_conv:
         if interval in dseg:
-            genes_at_limits[interval] = [dgenes_seg_conv[interval][0],
-                                         dgenes_seg_conv[interval][-1], dseg[interval]]
+            if len(dgenes_seg_conv[interval]) >= 4:
+                genes_at_limits[interval] = [dgenes_seg_conv[interval][0],
+                                             dgenes_seg_conv[interval][1],
+                                             dgenes_seg_conv[interval][-2],
+                                             dgenes_seg_conv[interval][-1], dseg[interval]]
+
 
     #extract genomic coordinates for these genes
     values = set(chain.from_iterable(genes_at_limits.values()))
@@ -145,15 +149,34 @@ def write_converted_seg(dgenes, dgenes_seg_conv, out, dseg=None):
 
         for interval in dgenes_seg_conv:
 
-            if interval in dseg:
+            if interval in dseg and interval in genes_at_limits:
 
-                first_gene, last_gene, anc = genes_at_limits[interval]
+                first_gene, second_gene, beforelast_gene, last_gene, anc = genes_at_limits[interval]
 
-                chrom, _, start = genes_at_limits_coord[first_gene]
+                chroms, _, start = genes_at_limits_coord[first_gene]
 
-                _, end, _ = genes_at_limits_coord[last_gene]
+                chrome, end, _ = genes_at_limits_coord[last_gene]
 
-                outfile.write(str(chrom)+'\t'+str(start)+'\t'+str(end)+'\t'+str(anc)+'\n')
+                if str(chroms) != interval[0]:
+                    chroms, _, start = genes_at_limits_coord[second_gene]
+
+                if str(chroms) != interval[0]:
+                    continue
+
+                if str(chrome) != interval[0]:
+                    chroms, _, start = genes_at_limits_coord[beforelast_gene]
+
+                if str(chrome) != interval[0]:
+                    continue
+
+                # print(chrome, start, end, anc, first_gene, last_gene, interval)
+
+                # if interval == ('22', 26037670, 26477669) or\
+                # interval == ('18', 27355072, 27531071) or interval== ('12', 24732046, 24996045):
+                #     print('ERROR')
+                #     raise
+
+                outfile.write(str(chrome)+'\t'+str(start)+'\t'+str(end)+'\t'+str(anc)+'\n')
 
 
 if __name__ == '__main__':
