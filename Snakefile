@@ -9,6 +9,7 @@ from scripts.trees import speciestree as spt
 #################################################################################################
 
 DUPLICATED_SPECIES = spt.get_species(config["species_tree"], config["ancestor"])
+config["prune_ancestor"] = config.get("prune_ancestor", "Neopterygii")
 REF_SPECIES = ["Oryzias.latipes", "Gasterosteus.aculeatus", "Tetraodon.nigroviridis", "Danio.rerio"]
 SEGMENTS = config.get("seg", "data/MacrosyntenyTGD/Results/K=13/{ref_species}.seg.txt")
 SEGMENTS_OK = config.get("seg_ok", "data/MacrosyntenyTGD/Results/K=13/{ref_species}_ok.seg.txt")
@@ -59,10 +60,9 @@ rule extract_duplicated_ancGenes:
     """
     input: trees = config.get("forest", 'test'), sptree = config["species_tree"]
     output: config["jobname"]+"/TGD_ancGenes.tsv"
-    shell:"""
-    python src/get_post_dup_ancgenes.py -t {input.trees} -d {config[ancestor]} -s {input.sptree}\
-                                        -o {output}
-    """
+    shell:
+        "python src/get_post_dup_ancgenes.py -t {input.trees} -d {config[ancestor]} "
+        "-s {input.sptree} -o {output}"
 
 
 rule color_each_reference:
@@ -72,10 +72,9 @@ rule color_each_reference:
     """
     input: segments = SEGMENTS_OK, genes = GENES, ancGenes = config["jobname"]+"/TGD_ancGenes.tsv"
     output: config["jobname"]+"/{ref_species}_colors.txt"
-    shell:"""
-    python src/color_reference_species.py -seg {input.segments} -g {input.genes}\
-                                          -ag {input.ancGenes} -o {output} -f {config[format]}
-    """
+    shell:
+        "python src/color_reference_species.py -seg {input.segments} -g {input.genes} "
+        "-ag {input.ancGenes} -o {output} -f {config[format]}"
 
 def get_ref_colors(wildcards):
     return expand(config["jobname"]+"/{ref_species}_colors.txt", ref_species=REF_SPECIES)
@@ -97,11 +96,9 @@ rule homogenize_references_ab:
            ancGenes = config["jobname"]+"/TGD_ancGenes.tsv"
     output: config["jobname"]+"/touched_file"
     params: guide = "Gasterosteus.aculeatus"
-    shell:"""
-    python src/homogenize_refs_colors.py -i {input.ref_colors} -ag {input.ancGenes}\
-                                         -guide_sp {params.guide} -g {input.genes}\
-                                         -f {config[format]}; touch {output}
-    """
+    shell:
+        "python src/homogenize_refs_colors.py -i {input.ref_colors} -ag {input.ancGenes} "
+        "-guide_sp {params.guide} -g {input.genes} -f {config[format]}; touch {output}"
 
 rule consensus_color_ancGene:
     """
@@ -112,10 +109,9 @@ rule consensus_color_ancGene:
            genes = get_genes, ancGenes = config["jobname"]+"/TGD_ancGenes.tsv"
     output: config["jobname"]+"/colored_TGD_ancGenes.tsv"
     params: ref_colors = get_ref_colors2
-    shell:"""
-    python src/color_ancgenes.py -ref {params.ref_colors} -g {input.genes} -ag {input.ancGenes}\
-                                 -o {output} -f {config[format]};
-    """
+    shell:
+        "python src/color_ancgenes.py -ref {params.ref_colors} -g {input.genes} "
+        "-ag {input.ancGenes} -o {output} -f {config[format]}"
 
 rule draw_paralogy_map:
     """
@@ -129,11 +125,9 @@ rule draw_paralogy_map:
                    # caption="Paralogy map for {wildcards.dup_species}",\
             stats = temp(config["jobname"]+"/{dup_species}_out_stats.txt")
 
-    shell:"""
-    python src/plot_paralogy_map.py -c {input.colors} -g {input.genes} -o {output.plot}\
-                                    -s {wildcards.dup_species} -f {config[format]}\
-                                    -os {output.stats}
-    """
+    shell:
+        "python src/plot_paralogy_map.py -c {input.colors} -g {input.genes} -o {output.plot} "
+        "-s {wildcards.dup_species} -f {config[format]} -os {output.stats}"
 
 def get_plots(wildcards):
     return expand(config["jobname"]+"/{dup_species}_ParalogyMap.svg", dup_species=DUPLICATED_SPECIES)
@@ -141,31 +135,49 @@ def get_plots(wildcards):
 def get_stats(wildcards):
     return expand(config["jobname"]+"/{dup_species}_out_stats.txt", dup_species=DUPLICATED_SPECIES)
 
+
 rule stats:
     input: st = get_stats,fig = get_plots
 
     output: config["jobname"]+"/out_stats.txt"
 
-    shell:"""
-    cat {input.st} > {output}
-    """
+    shell:
+        "cat {input.st} > {output}"
 
-rule plot_annotation_statistics:
-    """
-    Plots proportion of genome annotated.
-    """
-    input: stats = config["jobname"]+"/out_stats.txt",
 
-    output: boxplots = report(config["jobname"]+"/box_stats.svg", category="Annotation statistics"),\
-                   # caption="Proportion of genomes annotated and comparisons with previous results",\
-            sptree = report(config["jobname"]+"/sptree_stats.svg", category="Annotation statistics")
-                   # caption="Visualizaiton of annotation statistics on the species tree",\
-                   
-    shell:"""
-    python src/draw_species_tree_stats.py -i {input.stats} {config[comparisons]}\
-    -l {config[labels]} -s {config[species_tree]} -ob {output.boxplots}\
-    -os {output.sptree} -a {config[prune_ancestor]} -da {config[ancestor]}
-    """
+if "comparisons" in config:
+    rule plot_annotation_statistics1:
+        """
+        Plots proportion of genome annotated.
+        """
+        input: stats = config["jobname"]+"/out_stats.txt",
+
+        output: boxplots = report(config["jobname"]+"/box_stats.svg", category="Annotation statistics"),\
+                       # caption="Proportion of genomes annotated and comparisons with previous results",\
+                sptree = report(config["jobname"]+"/sptree_stats.svg", category="Annotation statistics")
+                       # caption="Visualizaiton of annotation statistics on the species tree",\
+                       
+        shell:
+            "python src/draw_species_tree_stats.py -i {input.stats} {config[comparisons]} "
+            "-l {config[labels]} -s {config[species_tree]} -ob {output.boxplots} "
+            "-os {output.sptree} -a {config[prune_ancestor]} -da {config[ancestor]}"
+
+else:
+    rule plot_annotation_statistics2:
+        """
+        Plots proportion of genome annotated.
+        """
+        input: stats = config["jobname"]+"/out_stats.txt",
+
+        output: boxplots = report(config["jobname"]+"/box_stats.svg", category="Annotation statistics"),\
+                       # caption="Proportion of genomes annotated and comparisons with previous results",\
+                sptree = report(config["jobname"]+"/sptree_stats.svg", category="Annotation statistics")
+                       # caption="Visualizaiton of annotation statistics on the species tree",\
+                       
+        shell:
+            "python src/draw_species_tree_stats.py -i {input.stats} -s {config[species_tree]} "
+            "-ob {output.boxplots} -os {output.sptree} -a {config[prune_ancestor]} "
+            "-da {config[ancestor]}"
 
 # rule compare_zfin:
 # rule plot_zfin:

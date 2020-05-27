@@ -99,7 +99,7 @@ def boxplot_stats(datasets, out="out_box.svg"):
             df_all = pd.concat([df_all, df])
         else:
             df_all = df
-
+    plt.figure(figsize=(3, 5))
     ax = sns.boxplot(data=df_all, y="Proportion of genome annotated (%)", x="Trees", width=0.5)
 
     ax.set_xticklabels(ax.get_xticklabels(), fontsize=9, rotation=60, ha='right')
