@@ -144,6 +144,8 @@ def write_converted_seg(dgenes, dgenes_seg_conv, out, dseg=None):
     if dseg:
         print(len(dseg), len(dgenes_seg_conv))
 
+
+    prev_chrom = ''
     #write res
     with open(out, 'w') as outfile:
 
@@ -176,7 +178,13 @@ def write_converted_seg(dgenes, dgenes_seg_conv, out, dseg=None):
                 #     print('ERROR')
                 #     raise
 
+                if prev_chrom and prev_chrom == chroms:
+                    start = max(int(start), int(prev_end)+1)
+
                 outfile.write(str(chrome)+'\t'+str(start)+'\t'+str(end)+'\t'+str(anc)+'\n')
+
+                prev_end = end
+                prev_chrom = chroms
 
 
 if __name__ == '__main__':
