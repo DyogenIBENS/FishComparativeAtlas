@@ -1,12 +1,15 @@
-# """
-# python src/draw_species_tree_stats.py -i
-# PM_Genofish_GENOMICUSV3_noPeri/out
-# PM_Genofish_GENOMICUSV3/out_newPM_Genofish_GENOMICUSV3_nocorr/out_new  -l
-# "GenomicusV3 + Edition + SCORPiOs" "GenomicusV3 + SCORPiOs" "Genomicus V3"
-# -s ../SCORPiOs/data/genofish_v3/sptree_without_gobidae.nwk
-# -ob PM_Genofish_GENOMICUSV3_noPeri/stats_boxplots.svg
-# -os PM_Genofish_GENOMICUSV3_noPeri/sptree_stats.svg -a Neopterygii -da Osteoglossocephalai
-# """
+"""
+TODO docstring
+
+python src/draw_species_tree_stats.py -i
+PM_Genofish_GENOMICUSV3_noPeri/out
+PM_Genofish_GENOMICUSV3/out_newPM_Genofish_GENOMICUSV3_nocorr/out_new  -l
+"GenomicusV3 + Edition + SCORPiOs" "GenomicusV3 + SCORPiOs" "Genomicus V3"
+-s ../SCORPiOs/data/genofish_v3/sptree_without_gobidae.nwk
+-ob PM_Genofish_GENOMICUSV3_noPeri/stats_boxplots.svg
+-os PM_Genofish_GENOMICUSV3_noPeri/sptree_stats.svg -a Neopterygii -da Osteoglossocephalai
+"""
+
 import argparse
 
 from ete3 import Tree, TreeStyle, NodeStyle, TextFace
@@ -19,6 +22,7 @@ import pandas as pd
 sns.set_palette("muted")
 
 def load_annotation_stats(input_file):
+
     """
     Loads annotation statistics into a dict.
 
@@ -43,6 +47,17 @@ def load_annotation_stats(input_file):
 def plot_species_tree_with_stats(sptree, stats, out="out_sp.svg", dupanc=None, c_name="viridis",
                                  anc=None):
     """
+    Draws a circular species tree with species colored according to a continuous variable, here
+    the proportion of the species genes annotated by the paralogy_map workflow.
+
+    Args:
+        sptree (str): Newick string or Newick file name of the species tree.
+        stats (dict): For a species (key) gives its associated value
+        out (str, optional): output figure file name
+        dupanc (str, optional): Name of an ancestor species to highlight on the tree
+        c_name (str, optional): Name of the maptlotlib continuous colormap to use
+        anc (str, optional): Ancestor name to only plot the subtree below it.
+
     """
 
     tree = Tree(sptree, format=1)
@@ -89,18 +104,28 @@ def plot_species_tree_with_stats(sptree, stats, out="out_sp.svg", dupanc=None, c
     tree.render(out, dpi=200, tree_style=circular_style)
 
 
-def boxplot_stats(datasets, out="out_box.svg"):
+def boxplot_stats(datasets, out="out_box.svg", yname="Proportion of genome annotated (%)"):
+
+    """
+    Draws boxplots of the distribution of a continuous variable associated to species.
+
+    Args:
+        datasets
+        out
+        yname
+    """
 
     for i, data in enumerate(datasets):
         label, stats = data
-        df = pd.DataFrame(stats.items(), columns=['Species', "Proportion of genome annotated (%)"])
+        df = pd.DataFrame(stats.items(), columns=['Species', yname])
         df["Trees"] = label
         if i > 0:
             df_all = pd.concat([df_all, df])
         else:
             df_all = df
+
     plt.figure(figsize=(3, 5))
-    ax = sns.boxplot(data=df_all, y="Proportion of genome annotated (%)", x="Trees", width=0.5)
+    ax = sns.boxplot(data=df_all, y=yname, x="Trees", width=0.5)
 
     ax.set_xticklabels(ax.get_xticklabels(), fontsize=9, rotation=60, ha='right')
     sns.despine()
@@ -143,18 +168,18 @@ if __name__ == '__main__':
 
     if not ARGS["labels"]:
         ARGS["labels"] = []
-        for i, _ in enumerate(ARGS["input"]):
-            ARGS["labels"].append(f"Dataset {i}")
+        for j, _ in enumerate(ARGS["input"]):
+            ARGS["labels"].append(f"Dataset {j}")
 
-    data_stats = []
-    for i, input_data in enumerate(ARGS["input"]):
+    DATA_STATS = []
+    for j, input_data in enumerate(ARGS["input"]):
         dstats = load_annotation_stats(input_data)
-        lab = ARGS["labels"][i]
-        data_stats.append((lab, dstats))
+        lab = ARGS["labels"][j]
+        DATA_STATS.append((lab, dstats))
 
-        if i == 0 and ARGS["sptree"]:
+        if j == 0 and ARGS["sptree"]:
             plot_species_tree_with_stats(ARGS["sptree"], dstats, out=ARGS["output_sp"],
                                          dupanc=ARGS["dupancestor"], anc=ARGS["ancestor"])
 
-    boxplot_stats(data_stats, out=ARGS["output_box"])
+    boxplot_stats(DATA_STATS, out=ARGS["output_box"])
     plt.close("all")

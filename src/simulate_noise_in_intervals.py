@@ -1,11 +1,8 @@
 """
-TODO
+    Script to inject random noise in input pre-TGD segments to asses robustness of the pipeline.
 
-type of noise to apply:
-move interval boundaries? --> i'll start with that. careful to check for disappearing intervals
-                          --> plot images to see what is going on
-shuffle a few labels?
-break regions?
+    Example:
+        $
 
 """
 
@@ -17,9 +14,21 @@ from scripts.synteny.mygenome import Genome
 from color_reference_species import load_nakatani_segments, genes_to_segments
 from convert_intervals import segments_to_genes
 
-#call this on each chromosome
+
 def apply_noise(dseg, sigma):
-    #sort keys by lower bound
+
+    """
+    Add noise to labelled intervals on a chromosome: gaussian noise on borders.
+
+    Args:
+        dseg (dict): labelled intervals
+        sigma (float): noise parameter
+
+    Returns:
+        dict: intervals after noise application
+    """
+
+    #sort intervals by start
     sorted_intervals = sorted(dseg.keys(), key=lambda x: x[1])
     stored_na = []
 
@@ -28,48 +37,94 @@ def apply_noise(dseg, sigma):
     ancs = []
     for interval in sorted_intervals:
         ch, beg, end = interval
-        # print(ch, beg)
         anc = dseg[interval]
+
+        #if first store start and end
         if not intervals_to_list:
             intervals_to_list += [beg, end]
             ancs.append(anc)
 
+        #if interval directly follows previous interval, store only end
         elif beg == intervals_to_list[-1]+1:
 
             intervals_to_list += [end]
             ancs.append(anc)
 
+        #otherwise, store gap as start and end: gap will be kept as gaps in results (==no label)
         else:
             intervals_to_list += [beg, end]
             stored_na.append((beg, end))
             ancs.append('na')
             ancs.append(anc)
 
-
+    #add nois to interval borders
     intervals_noise = gaussian_noise(np.array(intervals_to_list[1:-1]), sigma)
+
+    #convert limits back to integer
     intervals_noise = np.rint(intervals_noise)
+
+    #do not change chromosome start and stop
     intervals_noise = [intervals_to_list[0]]+list(intervals_noise)+[intervals_to_list[-1]]
+
+    #sort new limits (small intervals may have been inverted)
     intervals_noise = sorted(intervals_noise)
+
+    #map corresponding labels back
     dseg_noise = mapping_back_anc(intervals_noise, ancs, ch)
+
     return dseg_noise
 
+
 def mapping_back_anc(intervals, ancs, ch):
+
+    """
+    Maps predicted labels to intervals after random perturbation.
+
+    Args:
+        intervals (list): list of perturbed intervals (sorted)
+        ancs (list): labels (sorted, i.e label[0] correspond to label of intervals[0] before
+                     randomization)
+        ch (str): name of current chrom, to store along with interval start and stop
+
+    Returns:
+        dict: Correspondence randomized interval (key) <--> label (value)
+    """
+
     dseg = {}
     for i in range(len(intervals)-1):
         (beg, end) = intervals[i:i+2]
         if ancs[i] != 'na':
             dseg[(ch, (int(beg), int(end)))] = ancs[i]
-            # print(ch, beg, end)
 
     return dseg
 
 def gaussian_noise(x, sigma):
+
+    """
+    Adds gaussian noise to all elements of a list.
+
+    Args:
+        x (numpy.array):
+        sigma (int): gaussian noise parameter
+
+    Returns:
+        list: List after gaussian noise injection
+
+    """
+
     return list(np.random.normal(x, sigma))
 
 
 def write_intervals(dseg, output):
+
     """
+    Writes intervals + labels to file.
+
+    Args:
+        dseg (dict): interval (key) and label (value)
+        output (str): output name
     """
+
     with open(output, 'w') as outfile:
 
         for interval in dseg:
@@ -111,7 +166,6 @@ def genes_intervals_to_dummy_coord(dgenes_seg, dseg):
                 j += 1
 
             prev_stop = prev_stop+len(dgenes_seg[interval])+1
-
 
         else:
             prev_stop = len(dgenes_seg[interval])-1
