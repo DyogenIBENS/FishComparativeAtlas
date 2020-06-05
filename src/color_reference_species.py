@@ -4,7 +4,7 @@ Module docstring TODO
 """
 
 import argparse
-from collections import Counter
+from collections import Counter, OrderedDict
 from itertools import product
 
 from scripts.synteny.mygenome import Genome
@@ -12,9 +12,10 @@ from scripts.synteny.mygenome import Genome
 def load_nakatani_segments(seg_file, agg=True):
 
     """
-    Loads in a dictionary a segment file as produced by (Nakatani and McLysaght 2017).
+    Loads in a dictionary a segment file (as produced by Nakatani and McLysaght 2017).
     This file lists genomic intervals on a duplicated species genome and their predicted ancestral
-    pre-TGD chromosome.
+    pre-TGD chromosome, the file should be sorted so that intervals are ordered with respect to
+    their location on chromosomes.
 
     Args:
 
@@ -27,15 +28,19 @@ def load_nakatani_segments(seg_file, agg=True):
         (dict) : for each defined genomic interval (key) its ancestral pre-dup chromosome (value)
     """
 
-    dseg = {}
+    dseg = OrderedDict()
     prev_anc = ''
     prev_chrom = ''
     prev = ''
+    chrom_set = []
     with open(seg_file, 'r') as infile:
 
         for line in infile:
 
             chrom, start, stop, anc = line.strip().split('\t')
+
+            if not prev_chrom or chrom != prev_chrom:
+                chrom_set.append(chrom)
 
             if agg:
                 if not prev:
@@ -50,16 +55,48 @@ def load_nakatani_segments(seg_file, agg=True):
                     dseg[prev] = prev_anc
                     prev = (chrom, (int(start), int(stop)))
 
-                prev_anc = anc
-                prev_chrom = chrom
-
             else:
                 dseg[(chrom, int(start), int(stop))] = anc
+
+            prev_anc = anc
+            prev_chrom = chrom
 
         if agg and prev not in dseg:
             dseg[prev] = prev_anc
 
+    assert len(chrom_set) == len(set(chrom_set)), "Intervals in input are unordered please "\
+                                                  "check your input file"
+    check_order_and_overlap(dseg, agg)
     return dseg
+
+
+def check_order_and_overlap(dseg, agg=True):
+
+    """
+    Checks that loaded intervals are non-overlapping.
+
+    Args:
+        dseg (dict): loaded intervals (key:genomic location, value:interval label)
+
+    Raises:
+        Assertion error if any overlapping or unsorted input intervals
+    """
+
+    interval_list = []
+    prev_chrom = ''
+    for interval in dseg:
+        chrom = interval[0]
+        if not prev_chrom or chrom == prev_chrom:
+            if agg:
+                interval_list += list(sum(interval[1:], ()))
+            else:
+                interval_list += [interval[1], interval[2]]
+        else:
+            print(interval_list)
+            assert interval_list == sorted(interval_list), f"Intervals in input file are either "
+            "unordered or overlapping, please check your input file (Error raised for chr {chrom})"
+            interval_list = []
+
 
 def genes_to_segments(dgenes, dseg, transform=False):
 
@@ -101,7 +138,7 @@ def genes_to_segments(dgenes, dseg, transform=False):
                             dgenes_seg[gene.names[0]] = seg
                             if transform:
                                 dgenes_seg[gene.names[0]] = dseg[seg]
-
+    print(len(dgenes_seg))
     return dgenes_seg
 
 
@@ -238,10 +275,10 @@ if __name__ == '__main__':
     COLORS = {}
     USED = []
     for ANC in ANC_CHR.values():
-        segments = [s for s in ANC_CHR if ANC_CHR[s] == ANC]
+        segments = {s for s in ANC_CHR if ANC_CHR[s] == ANC}
         max_value = 0
         for s in segments:
-            l = len([k for k in GENES_ANC_CHR if GENES_ANC_CHR[k] == s])
+            l = len({k for k in GENES_ANC_CHR if GENES_ANC_CHR[k] == s})
 
             if l > max_value:
                 max_segment = s
