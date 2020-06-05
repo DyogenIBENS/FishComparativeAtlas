@@ -119,13 +119,15 @@ rule draw_paralogy_map:
     input: colors = f'{config["jobname"]}/colored_TGD_ancGenes.tsv',
            genes = GENES.replace('{ref_species}', '{dup_species}')
 
-    output: plot = report(f'{config["jobname"]}/{{dup_species}}_ParalogyMap.svg',category="Paralogy Maps"),\
+    output: plot = report(f'{config["jobname"]}/{{dup_species}}_ParalogyMap.svg', category="Paralogy Maps"),\
                    # caption="Paralogy map for {wildcards.dup_species}",\
             stats = temp(f'{config["jobname"]}/{{dup_species}}_out_stats.txt')
 
+    params: draw = config.get('draw', '')
+
     shell:
         "python src/plot_paralogy_map.py -c {input.colors} -g {input.genes} -o {output.plot} "
-        "-s {wildcards.dup_species} -f {config[format]} -os {output.stats}"
+        "-s {wildcards.dup_species} -f {config[format]} -os {output.stats} {params.draw}"
 
 
 rule stats:
