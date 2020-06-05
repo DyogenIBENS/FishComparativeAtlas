@@ -16,7 +16,7 @@
 
 import argparse
 import pickle
-
+from pathlib import Path
 
 from matplotlib import pyplot as plt
 from matplotlib.collections import BrokenBarHCollection
@@ -25,6 +25,7 @@ from matplotlib.colors import is_color_like
 import seaborn as sns
 
 from order_chrom import ORDER_CHROM
+from palette import PALETTE, REORDER_CHROMS
 
 from scripts.synteny.mygenome import Genome
 
@@ -85,16 +86,15 @@ def read_ancgenes_colors(file_anc_colors, genes, anc=False, species='', out=''):
     if anc:
         pred = len(genes_anc)
 
+    if genes:
+        frac = pred/float(tot) * 100
+        stat = species+': '+str(pred)+' annotated genes ('+str(round(frac, 2))+'%)\n'
 
-    frac = pred/float(tot) * 100
-
-
-    st = species+': '+str(pred)+' annotated genes ('+str(round(frac, 2))+'%)\n'
-    if out:
-        with open(out, 'w') as outfile:
-            outfile.write(st)
-    else:
-        print(st)
+        if out:
+            with open(out, 'w') as outfile:
+                outfile.write(stat)
+        else:
+            print(stat)
 
     return genes_anc
 
@@ -215,6 +215,124 @@ def draw_colors(dgenes, order, genes_colors, species, out, palette, min_length=3
         with open(species+"_"+title+'.pkl', "wb") as outf:
             pickle.dump(to_save, outf)
 
+
+
+
+def draw_anc(dgenes, order, species, out, palette, min_length=30, max_chr=30,\
+             sort_by="size", title='Paralogy Map', save=False):
+
+    """
+    Uses matplotlib to draw the genome annotated by post-duplication chromosomes.
+
+
+    Args:
+        dgenes (Genome.genes_list): genome to plot
+
+        order (dict): pre-assigned chromosomes order based on Figures in Nakatani and McLysaght
+
+        genes_colors (dict): for each gene (key) its predicted post-duplication chromosomes (value)
+
+        out (str): path for output figure
+
+        palette (dict): for each post-duplication chromosomes (key) its associated color (value)
+
+        min_length (int, optional): minimum number of genes to plot a chromosome
+
+        max_chr (int, optional): maximum numbre of chromosomes to plot
+
+        sort_by (str, optional): 'size' if chromosomes are to be sorted by size, 'name' by names.
+
+        title (str, optional): title for the generated figure
+
+        save (bool, optional): whether to pickle dump the plotted python dict
+    """
+
+    default_palette = sns.color_palette("Set2")
+    assert sort_by in ["size", "names"], "Invalid `sort_by` argument, please check"
+
+    #loaded pre-defined chrom order, if specified
+    if species in order:
+        order = order[species]
+
+    #compute chrom order by size
+    elif sort_by == "size":
+        order = [str(i) for i in sorted(dgenes.keys(), key=lambda chrom: len(dgenes[chrom]),\
+                reverse=True)]
+
+    #compute chrom order by name
+    elif sort_by == "names":
+        order = sorted([i for i in dgenes.keys() if isinstance(i, int)])
+        order = [str(i) for i in order]
+
+    i = 0
+    chrom_draw = {}
+    height = 0.9
+    spacing = 0.9
+    xranges, colors = [], []
+    j = 0
+
+    #load pre-defined color palette
+    if not palette:
+        for j, color in enumerate(default_palette):
+            palette[str(j)] = color
+
+    order = []
+    #Fill the python dict for plot
+    for chromosome in range(1, 14):
+        for letter in ["a", "b"]:
+            chrom = str(chromosome) + letter
+            order.append(chrom)
+            for _ in dgenes[chrom]:
+
+                col = chrom
+                assert col in palette or is_color_like(col), f'Cannot understand color {col}'
+
+                if col in palette:
+                    col = palette[col]
+
+                xranges.append((i, 1))
+                colors.append(col)
+                i += 1
+
+            chrom_draw[chrom] = (xranges, colors)
+            xranges, colors = [], []
+            i = 0
+
+    #plot
+    _, ax = plt.subplots(1, 1)
+    plt.title(species +" "+title)
+    yticks = []
+    yticklabels = []
+    ymin, nb = 0, 0
+    to_save = {}
+    for chrom in order[::-1]:
+        xranges, colors = chrom_draw[chrom]
+        to_save[chrom] = colors
+        if len(colors) > min_length and nb < max_chr:
+            ymin += height + spacing
+            yrange = (ymin, height)
+            coll = BrokenBarHCollection(xranges, yrange, facecolors=colors)
+            ax.add_collection(coll)
+            center = yrange[0] + yrange[1]/2.
+            yticks.append(center)
+            yticklabels.append(chrom)
+            nb += 1
+
+    ax.axis('tight')
+    ax.set_yticks(yticks)
+    ax.set_yticklabels(yticklabels)
+    plt.ylabel('ancestral chromosomes')
+    plt.xlabel("Number of genes")
+    sns.despine()
+    plt.tight_layout()
+    plt.savefig(out, dpi=200)
+    plt.close('all')
+
+    #dump dict to file
+    if save:
+        with open(species+"_"+title+'.pkl', "wb") as outf:
+            pickle.dump(to_save, outf)
+
 def load_palette_from_file(input_file):
 
     """
@@ -224,7 +342,7 @@ def load_palette_from_file(input_file):
         input_file (str): Input file with chromosome name and associated color
 
     Returns:
-        dict: for each chromosome (key) ist associated color (value)
+        dict: for each chromosome (key) its associated color for plot (value)
     """
 
     palette = {}
@@ -244,7 +362,7 @@ if __name__ == '__main__':
                         required=True)
 
     PARSER.add_argument('-g', '--genes', type=str, help='Genes file of the target species',
-                        required=True, default='')
+                        required=False, default='')
 
 
     ## Optional ##
@@ -254,8 +372,8 @@ if __name__ == '__main__':
     PARSER.add_argument('-s', '--species_name', type=str, help="Name of the species for plot title",
                         required=False, default='')
 
-    PARSER.add_argument('-f', '--genesformat', type=str, required=False, help="Format of the genes\
-                        file either bed or dyogen", default='bed')
+    PARSER.add_argument('-f', '--genesformat', type=str, required=False, help="Format of the genes"
+                        "file either bed or dyogen", default='bed')
 
     PARSER.add_argument('-maxC', '--max_chr', type=int, required=False, help="Max number of\
                         chromosomes to plot", default=30)
@@ -286,19 +404,11 @@ if __name__ == '__main__':
     PARSER.add_argument('-os', '--stats_out', type=str, required=False, default='', help="File to\
                         dump stats")
 
+    PARSER.add_argument('--dontdraw', action='store_true')
 
     ARGS = vars(PARSER.parse_args())
 
     if not ARGS["palette_from_file"]:
-
-
-        PALETTE = {'5a': "lime", '5b': "greenyellow", "1a": "red", "1b":"crimson",\
-                   "9b":"darkorange", "9a": "orangered", "13a":'#CD00CD', '13b': "#FF32FF",\
-                   "3a":"darkblue", "3b":"royalblue", "2a":"black", "2b":"#404040",\
-                   "8a": "darkgreen", "8b": "mediumseagreen", "6a":"#707070", "6b":'#B8B8B8',\
-                   '4a': "brown", "4b": "peru", "10a": "gold", "10b":"yellow", "11a":"mediumorchid",
-                   "11b": "plum", "12a":"deeppink", "12b":"hotpink", "7a": "deepskyblue",\
-                   "7b": "lightskyblue"}
 
         #use color of "a" genes to serve as colors for pre-duplication chr
         KEYS = set(PALETTE.keys())
@@ -313,13 +423,58 @@ if __name__ == '__main__':
 
     GENES = {}
 
-    GENOME = Genome(ARGS["genes"], ARGS["genesformat"])
-    GENES = {g.names[0] for g in GENOME}
+    if ARGS["genes"]:
 
-    GENES_COL = read_ancgenes_colors(ARGS["color"], GENES, anc=ARGS['singlesp'],
-                                     species=ARGS["species_name"], out=ARGS["stats_out"])
+        GENOME = Genome(ARGS["genes"], ARGS["genesformat"])
+        GENES = {g.names[0] for g in GENOME}
 
-    draw_colors(GENOME.genes_list, ORDER_CHROM, GENES_COL, ARGS["species_name"],
-                ARGS["output_file"], PALETTE, min_length=ARGS["min_length"],
-                max_chr=ARGS["max_chr"], title=ARGS["title"], sort_by=ARGS["sort_by"],
-                save=ARGS['save'])
+        GENES_COL = read_ancgenes_colors(ARGS["color"], GENES, anc=ARGS['singlesp'],
+                                         species=ARGS["species_name"], out=ARGS["stats_out"])
+
+        if not ARGS["dontdraw"]:
+            draw_colors(GENOME.genes_list, ORDER_CHROM, GENES_COL, ARGS["species_name"],
+                        ARGS["output_file"], PALETTE, min_length=ARGS["min_length"],
+                        max_chr=ARGS["max_chr"], title=ARGS["title"], sort_by=ARGS["sort_by"],
+                        save=ARGS['save'])
+
+        else:
+            sys.stderr.write("Touching empty figure file as drawing is disabled with --dontdraw\n")
+            Path(ARGS["output_file"]).touch(exist_ok=True)
+
+    else:
+
+        GENES_COL = read_ancgenes_colors(ARGS["color"], GENES, anc=ARGS['singlesp'],
+                                         species=ARGS["species_name"], out=ARGS["stats_out"])
+
+
+        PALETTE_NEW = {}
+        for val in GENES_COL.values():
+            if val != '?':
+                new_val = str(REORDER_CHROMS[int(val[:-1])]) + val[-1]
+                GENES[new_val] = {i for i in GENES_COL if GENES_COL[i] == val}
+                PALETTE_NEW[new_val] = PALETTE[val]
+        draw_anc(GENES, ORDER_CHROM, ARGS["species_name"],
+                 ARGS["output_file"], PALETTE_NEW, min_length=ARGS["min_length"],
+                 max_chr=ARGS["max_chr"], title=ARGS["title"], sort_by=ARGS["sort_by"],
+                 save=ARGS['save'])
+
+        # PALETTE_NEW = {}
+        # seen = []
+        # for val in GENES_COL.values():
+        #     if val != '?':
+        #         val = int(val[:-1])
+        #         if val not in seen:
+        #             print(val)
+        #             seen.append(val)
+
+        #             # new_val = str(reorder_chroms[int(val[:-1])]) + val[-1]
+        #             GENES[str(reorder_chroms[val])+'b'] = {'_'.join(i.split('_')[:-1]) for i in GENES_COL if GENES_COL[i][:-1] and int(GENES_COL[i][:-1])==val}
+        #             GENES[str(reorder_chroms[val])+'a'] = GENES[str(reorder_chroms[val])+'b']
+        #             PALETTE_NEW[str(reorder_chroms[val])+'a'] = PALETTE[str(val)+'a']
+        #             PALETTE_NEW[str(reorder_chroms[val])+'b'] = PALETTE[str(val)+'b']
+        draw_anc(GENES, ORDER_CHROM, ARGS["species_name"],
+                 ARGS["output_file"], PALETTE_NEW, min_length=ARGS["min_length"],
+                 max_chr=ARGS["max_chr"], title=ARGS["title"], sort_by=ARGS["sort_by"],
+                 save=ARGS['save'])
+    #TODO: option to draw pre and post duplication chromosomes -
+    #-> generalized funtion instead of ugly hack above
