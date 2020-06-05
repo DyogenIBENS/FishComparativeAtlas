@@ -1,7 +1,8 @@
 """
-
+Script to convert input data for the Paralogy Map between genome assemblies.
 """
 
+import sys
 import argparse
 from collections import OrderedDict
 from itertools import chain
@@ -105,20 +106,20 @@ def convert_intervals(dconv, dgenes_seg):
 
     return dgenes_seg_conv
 
-
-def write_converted_seg(dgenes, dgenes_seg_conv, out, dseg=None):
+def get_genes_at_limits(dgenes_seg_conv, dseg):
 
     """
-    Writes converted segment file.
+    Finds all genes at intervals ends.
 
     Args:
-        dgenes (Genome): genes
         dgenes_seg_conv (dict): converted gene intervals
-        out (str): output file
-        dseg (dict, optional): input genomic intervals, if present will be used to print stats
+        dseg (dict): input genomic intervals
+
+    Returns:
+        OrderedDict: for each interval, a 5-element list with the two first genes, two last genes +
+                     input coordinates
     """
 
-    #find all genes at intervals ends
     genes_at_limits = OrderedDict()
     for interval in dgenes_seg_conv:
         if interval in dseg:
@@ -128,27 +129,58 @@ def write_converted_seg(dgenes, dgenes_seg_conv, out, dseg=None):
                                              dgenes_seg_conv[interval][-2],
                                              dgenes_seg_conv[interval][-1], dseg[interval]]
 
+    return genes_at_limits
 
-    #extract genomic coordinates for these genes
-    values = set(chain.from_iterable(genes_at_limits.values()))
+def get_genomic_coord(gene_list, dgenes):
+
+    """
+    Extracts genomic start & stop for a list of genes.
+
+    Args:
+        gene_list (list): input gene list
+        dgenes (Genome): genes
+
+    Returns:
+        OrderedDict: For each gene in `gene_list` present in `dgenes` gives its chr, start and end
+    """
+
     genes_at_limits_coord = OrderedDict()
     for chromosome in dgenes.genes_list:
 
         for gene in dgenes.genes_list[chromosome]:
 
-            if gene.names[0] in values:
+            if gene.names[0] in gene_list:
 
                 genes_at_limits_coord[gene.names[0]] = (chromosome, gene.end, gene.beginning)
 
+    return genes_at_limits_coord
+
+def write_converted_seg(dgenes, dgenes_seg_conv, out, dseg=None):
+
+    """
+    Writes converted segment to file.
+
+    Args:
+        dgenes (Genome): genes
+        dgenes_seg_conv (dict): converted gene intervals
+        out (str): output file
+        dseg (dict): input genomic intervals
+    """
+
+    genes_at_limits = get_genes_at_limits(dgenes_seg_conv, dseg)
+
+    #extract genomic coordinates for these genes
+    #TOIMPROVE break-case if a gene is named '1a', '1b', '2a' etc... (unlikely)
+    values = set(chain.from_iterable(genes_at_limits.values()))
+    genes_at_limits_coord = get_genomic_coord(values, dgenes)
+
     #print out conversion stats
-    if dseg:
-        print(len(dseg), len(dgenes_seg_conv))
+    sys.stdout.write(f"Number of input intervals: {len(dseg)}, Converted: {len(dgenes_seg_conv)}\n")
 
-
-    prev_chrom = ''
     #write res
     with open(out, 'w') as outfile:
-
+        prev_chrom = ''
+        prev_reg = ''
         for interval in dgenes_seg_conv:
 
             if interval in dseg and interval in genes_at_limits:
@@ -171,18 +203,30 @@ def write_converted_seg(dgenes, dgenes_seg_conv, out, dseg=None):
                 if str(chrome) != interval[0]:
                     continue
 
-                # print(chrome, start, end, anc, first_gene, last_gene, interval)
+                if start > end:
+                    start, end = end, start
 
-                # if interval == ('22', 26037670, 26477669) or\
-                # interval == ('18', 27355072, 27531071) or interval== ('12', 24732046, 24996045):
-                #     print('ERROR')
-                #     raise
+                lg_old = interval[2] - interval[1]
+                if prev_reg and (end - start) > 1.20*lg_old:
+                    prev_reg = ''
+                    continue
 
-                if prev_chrom and prev_chrom == chroms:
-                    start = max(int(start), int(prev_end)+1)
+                if (end - start) > 1.20*lg_old and not prev_reg:
 
-                outfile.write(str(chrome)+'\t'+str(start)+'\t'+str(end)+'\t'+str(anc)+'\n')
+                    if prev_chrom and prev_chrom == chroms:
+                        prev_reg = (max(int(start), int(prev_end)+1), end, lg_old, chrome, anc)
 
+                        continue
+                
+                if prev_reg:
+                    p_end = min(prev_reg[1], end)
+                    if p_end - prev_reg[0] <= 1.20 * prev_reg[2]:
+                        to_write = f"{prev_reg[3]}\t{prev_reg[0]}\t{prev_reg[1]}\t{prev_reg[4]}\n"
+                        outfile.write(to_write)
+
+                to_write = f"{chrome}\t{start}\t{end}\t{anc}\n"
+                outfile.write(to_write)
+                prev_reg = ''
                 prev_end = end
                 prev_chrom = chroms
 
@@ -195,14 +239,14 @@ if __name__ == '__main__':
     PARSER.add_argument('-g', '--genes', nargs='+', help='Genes files, first old ids then new',
                         required=True)
 
-    PARSER.add_argument('-seg', '--ancestral_seg', type=str, help='Nakatani et al. ancestral\
-                        chromosomes', required=True)
+    PARSER.add_argument('-seg', '--ancestral_seg', type=str, help='Nakatani et al. ancestral'
+                        'chromosomes prediction file', required=True)
 
     PARSER.add_argument('-id', '--history_ids', type=str, help='Ensembl CONVERT_ID file',
                         required=True)
 
-    PARSER.add_argument('-o', '--outfile', type=str, help='output file', required=False,
-                        default='out')
+    PARSER.add_argument('-o', '--outfile', type=str, help='Name for the output file',
+                        required=False, default='out')
 
     PARSER.add_argument('-f', '--genesformat', nargs='+', required=False, default=['bed'])
 
@@ -214,12 +258,10 @@ if __name__ == '__main__':
     SEG = load_nakatani_segments(ARGS["ancestral_seg"], agg=False)
 
     if len(ARGS["genesformat"]) == 1:
-
         ARGS["genesformat"].append(ARGS["genesformat"][0])
 
     GENOMES = []
     for in_file, in_format in zip(ARGS["genes"], ARGS["genesformat"]):
-
         GENOMES.append(Genome(in_file, in_format))
 
     GENES89_SEG = segments_to_genes(GENOMES[0], SEG)
