@@ -10,7 +10,6 @@ import argparse
 import numpy as np
 from scripts.synteny.mygenome import Genome
 
-
 from color_reference_species import load_nakatani_segments, genes_to_segments
 from convert_intervals import segments_to_genes
 
@@ -149,6 +148,8 @@ def write_genomic_intervals_from_genes(dseg, output):
 
 
 def genes_intervals_to_dummy_coord(dgenes_seg, dseg):
+    """
+    """
     coord_g = {}
     d_genes = {}
     prev_ch = ''
@@ -179,6 +180,9 @@ def genes_intervals_to_dummy_coord(dgenes_seg, dseg):
 
 
 def genes_to_segments2(genes_coord, dseg, dgenes=None, transform=True):
+
+    """
+    """
 
     dgenes_seg = {}
     for chromosome in genes_coord.keys():
@@ -240,7 +244,6 @@ if __name__ == '__main__':
 
     PARSER.add_argument('-g', '--genes', type=str, help='Genes file', required=False, default='')
 
-
     PARSER.add_argument('-s', '--sigma', type=float, help='gaussian noise parameter',
                         required=False, default=5)
 
@@ -250,7 +253,7 @@ if __name__ == '__main__':
     PARSER.add_argument('-ori', '--save_ori', type=str, required=False,
                         default='')
 
-    PARSER.add_argument('--genes_intervals', action='store_true')
+    PARSER.add_argument('--genes_intervals', action='store_true', help='input is gene interval')
 
     ARGS = vars(PARSER.parse_args())
 
@@ -263,8 +266,7 @@ if __name__ == '__main__':
     NOISY_SEGS = {}
 
 
-    if not ARGS["genes_intervals"]:
-
+    if ARGS["genes_intervals"]:
 
         for chrom in CHROMS:
             #TODO: improve this
@@ -307,7 +309,7 @@ if __name__ == '__main__':
 
                     else:
                         start = prev_e
-                        _, end, _ = sorted_genes[-1]
+                        _, end, anc = sorted_genes[-1]
                         prev_e = end
 
                     out.write(chrom+'\t'+str(start)+'\t'+str(end)+'\t'+anc+'\n')
