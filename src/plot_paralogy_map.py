@@ -14,6 +14,8 @@
 # -g Salmo_salar_genes_chrom_names.bz2 -o test_salmon.svg -s Salmo.salar -sort "names" -f dyogen
 # -t "4R sequence/synteny conflicts --save
 
+import sys
+import os
 import argparse
 import pickle
 from pathlib import Path
@@ -95,11 +97,10 @@ def read_ancgenes_colors(file_anc_colors, genes, anc=False, species='', out=''):
                 outfile.write(stat)
         else:
             print(stat)
-
     return genes_anc
 
 
-def draw_colors(dgenes, order, genes_colors, species, out, palette, min_length=30, max_chr=30,\
+def draw_colors(dgenes, order, genes_colors, species, out, palette=None, min_length=30, max_chr=30,\
                 sort_by="size", title='Paralogy Map', save=False):
 
     """
@@ -127,7 +128,6 @@ def draw_colors(dgenes, order, genes_colors, species, out, palette, min_length=3
 
         save (bool, optional): whether to pickle dump the plotted python dict
     """
-
     default_palette = sns.color_palette("Set2")
     assert sort_by in ["size", "names"], "Invalid `sort_by` argument, please check"
 
@@ -143,6 +143,8 @@ def draw_colors(dgenes, order, genes_colors, species, out, palette, min_length=3
     #compute chrom order by name
     elif sort_by == "names":
         order = sorted([i for i in dgenes.keys() if isinstance(i, int)])
+        if not order:
+            order = sorted([i for i in dgenes.keys() if i])
         order = [str(i) for i in order]
 
     i = 0
@@ -154,6 +156,7 @@ def draw_colors(dgenes, order, genes_colors, species, out, palette, min_length=3
 
     #load pre-defined color palette
     if not palette:
+        palette = {}
         for j, color in enumerate(default_palette):
             palette[str(j)] = color
 
@@ -212,7 +215,14 @@ def draw_colors(dgenes, order, genes_colors, species, out, palette, min_length=3
 
     #dump dict to file
     if save:
+
+        #for recombination pipeline
+        # outpkl, _ = os.path.splitext(out)
+        # with open(outpkl+'.pkl', "wb") as outf:
+
+        #for paralogy_map_pipeline
         with open(species+"_"+title+'.pkl', "wb") as outf:
+
             pickle.dump(to_save, outf)
 
 
@@ -406,9 +416,11 @@ if __name__ == '__main__':
 
     PARSER.add_argument('--dontdraw', action='store_true')
 
+    PARSER.add_argument('--default_palette', action='store_true')
+
     ARGS = vars(PARSER.parse_args())
 
-    if not ARGS["palette_from_file"]:
+    if not ARGS["palette_from_file"] and not ARGS["default_palette"]:
 
         #use color of "a" genes to serve as colors for pre-duplication chr
         KEYS = set(PALETTE.keys())
@@ -417,9 +429,12 @@ if __name__ == '__main__':
                 PALETTE[key[:-1]] = PALETTE[key]
             elif key == '9b':
                 PALETTE[key[:-1]] = PALETTE[key]
-    else:
+    elif ARGS["palette_from_file"]:
 
         PALETTE = load_palette_from_file(ARGS["palette_from_file"])
+
+    else:
+        PALETTE = None
 
     GENES = {}
 
