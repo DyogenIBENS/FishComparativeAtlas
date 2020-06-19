@@ -83,12 +83,12 @@ def color_ancgenes(colors, genes, ancgenes, output, propagate=True):
                 if not ex_aequo:
 
                     #TODO remove hard_coded index below
-                    store_votes[anc[12:]] = winner
+                    store_votes[anc] = winner
 
                     outfile.write(line.strip()+'\t'+winner+'\n')
 
                 else:
-                    store_votes[anc[12:]] = "?"
+                    store_votes[anc] = "?"
                     outfile.write(line.strip()+'\t?\n')
 
 
@@ -99,11 +99,11 @@ def color_ancgenes(colors, genes, ancgenes, output, propagate=True):
             for line in infile:
                 anc, descendants = line.strip().split('\t')
 
-                if anc[12:] not in store_votes:
-                    ohnologue = anc[12:-1] + letter[anc[-1]]
+                if anc not in store_votes:
+                    ohnologue = anc[:-1] + letter[anc[-1]]
                     if ohnologue in store_votes and store_votes[ohnologue] != "?":
                         winner_ohno = store_votes[ohnologue]
-                        winner = winner_ohno[0] + letter[winner_ohno[-1].upper()].lower()
+                        winner = winner_ohno[:-1] + letter[winner_ohno[-1].upper()].lower()
                         outfile.write(line.strip()+'\t'+winner+'\n')
 
 if __name__ == '__main__':
