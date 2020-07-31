@@ -1,6 +1,6 @@
 """
     Script to homogenize post-duplication chromsomes that have been assigned independently on
-    reference species so that orthologous chromsomes have the same name.
+    reference species, so that orthologous chromsomes have the same name.
 
     Example:
 
@@ -41,7 +41,7 @@ def homogenize_on_guide(orthologs, d_color, guide, k=13):
 
     """
     Homogenizes post-deuplication chromsomes names across species, so that orthologs have the same
-    name, using a one of the references as guide.
+    name, using one of the references as guide.
 
 
     Args:
