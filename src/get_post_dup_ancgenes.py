@@ -41,14 +41,16 @@ def write_post_dup_ancgenes(input_forest, duplicated_species, out, outgr=None, a
 
     k = 0
 
-    sys.stderr.write(f"Browsing trees...")
+    sys.stderr.write(f"Browsing trees...\n")
+    sys.stderr.flush()
 
     with open(input_forest, 'r') as infile, open(out, 'w') as outfile:
 
         for nb, tree in enumerate(read_multiple_objects(infile)):
 
             if nb%1000 == 0 and nb:
-                sys.stderr.write(f"Browsed {nb} trees...")
+                sys.stderr.write(f"Browsed {nb} trees...\n")
+                sys.stderr.flush()
 
             tree = Tree(tree)
             leaves = tree.get_leaves()
