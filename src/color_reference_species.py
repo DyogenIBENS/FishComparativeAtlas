@@ -1,6 +1,10 @@
-
 """
-Module docstring TODO
+    Script to segment modern species genome with respect to post-TGD chromosomes, based on gene
+    trees and pre-TGD ancestral reconstruction.
+
+    Example:
+        $ python color_reference_species.py -seg Tetraodon.seg.txt -ag TGD_ancgenes.tsv
+                                            -g genes.Tetraodon.nigroviridis.bz2 [-o out] [-f dyogen]
 """
 
 import argparse
@@ -272,6 +276,7 @@ if __name__ == '__main__':
 
     OHNOLOGS = load_ohnologs(ARGS["ancestral_genes"], set(GENES_ANC_CHR.keys()))
 
+    #identify the largest block for each ancestral chromosome
     COLORS = {}
     USED = []
     for ANC in ANC_CHR.values():
