@@ -59,7 +59,7 @@ rule extract_duplicated_ancGenes:
     output: f'{config["jobname"]}/TGD_ancGenes.tsv'
     shell:
         "python src/get_post_dup_ancgenes.py -t {input.trees} -d {config[ancestor]} "
-        "-s {input.sptree} -o {output}"
+        "-s {input.sptree} -o {output} --check_root"
 
 
 rule color_each_reference:

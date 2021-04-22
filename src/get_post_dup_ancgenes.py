@@ -12,13 +12,13 @@ from collections import OrderedDict
 from ete3 import Tree
 
 from scripts.synteny.duplicated_families import tag_duplicated_species
-from scripts.trees.speciestree import get_species
+from scripts.trees.speciestree import get_species, get_anc_order
 from scripts.trees.orthologs import is_speciation
 from scripts.trees.utilities import read_multiple_objects
 
 
 def write_post_dup_ancgenes(input_forest, duplicated_species, out, outgr=None, ancg="ancGene_TGD_",
-                            add_sp_names=False):
+                            add_sp_names=False, root_check=None):
 
     """
     Browses input gene trees and writes an ancGenes file with post-duplication ancestral genes and
@@ -53,6 +53,15 @@ def write_post_dup_ancgenes(input_forest, duplicated_species, out, outgr=None, a
                 sys.stderr.flush()
 
             tree = Tree(tree)
+
+
+            if len(tree) == 1:
+                # print(tree)
+                continue
+
+            if root_check and tree.S not in root_check:
+                continue
+
             leaves = tree.get_leaves()
 
             #find all monphyletic telost groups
@@ -136,10 +145,19 @@ if __name__ == '__main__':
     PARSER.add_argument('--add_sp', action='store_true',
                         help="Add '_' + species name to gene names")
 
+    PARSER.add_argument('--check_root', action='store_true',
+                        help="Check that tree is rooted above teleost to include it in ancGenes.")
+
     ARGS = vars(PARSER.parse_args())
 
     #Study species
     DUP_SPECIES = get_species(ARGS["speciesTree"], ARGS["dupSp"])
 
+    ROOTS_OK = None
+    if ARGS["check_root"]:
+        ANC = get_anc_order(ARGS["speciesTree"])
+        ROOTS_OK = {i for i in ANC if ARGS["dupSp"] in ANC[i] or i == ARGS["dupSp"]}
+        # print(ROOTS_OK)
+
     write_post_dup_ancgenes(ARGS["treesFile"], DUP_SPECIES, ARGS["outfile"], ARGS["outgr_ortho"],
-                            add_sp_names=ARGS["add_sp"])
+                            add_sp_names=ARGS["add_sp"], root_check=ROOTS_OK)
