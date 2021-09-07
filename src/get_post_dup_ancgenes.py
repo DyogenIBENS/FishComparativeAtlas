@@ -155,7 +155,7 @@ if __name__ == '__main__':
 
     ROOTS_OK = None
     if ARGS["check_root"]:
-        ANC = get_anc_order(ARGS["speciesTree"])
+        ANC = get_anc_order(ARGS["speciesTree"], prune=False)
         ROOTS_OK = {i for i in ANC if ARGS["dupSp"] in ANC[i] or i == ARGS["dupSp"]}
         # print(ROOTS_OK)
 

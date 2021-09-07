@@ -18,7 +18,7 @@ from scripts.synteny.mygenome import Genome
 from homogenize_refs_colors import read_reference_colors
 
 
-def color_ancgenes(colors, genes, ancgenes, output, propagate=True):
+def color_ancgenes(colors, genes, ancgenes, output, propagate=True, verbose=False):
 
     """
     Majority vote of genes from reference species to assign a post-duplication chromosome
@@ -43,7 +43,9 @@ def color_ancgenes(colors, genes, ancgenes, output, propagate=True):
     """
 
     letter = {"A":"B", "B":"A"}
-
+    maj = 0
+    voting = set()
+    tot = set()
     with open(ancgenes, 'r') as infile, open(output, 'w') as outfile:
 
         store_votes = {}
@@ -54,6 +56,7 @@ def color_ancgenes(colors, genes, ancgenes, output, propagate=True):
             descendants = descendants.split()
 
             votes = {}
+            all_votes = set()
 
             for sp in genes:
                 sp_genes = genes[sp].intersection(descendants)
@@ -63,6 +66,7 @@ def color_ancgenes(colors, genes, ancgenes, output, propagate=True):
 
                         votes[sp] = votes.get(sp, {})
                         votes[sp][color] = votes[sp].get(color, 0) + 1
+                        all_votes.add(color)
 
             if votes:
 
@@ -86,6 +90,10 @@ def color_ancgenes(colors, genes, ancgenes, output, propagate=True):
                     store_votes[anc] = winner
 
                     outfile.write(line.strip()+'\t'+winner+'\n')
+                    tot.add(anc[:-1])
+                    if len(all_votes) != 1:
+                        voting.add(anc[:-1])
+                        maj += 1
 
                 else:
                     store_votes[anc] = "?"
@@ -102,9 +110,12 @@ def color_ancgenes(colors, genes, ancgenes, output, propagate=True):
                 if anc not in store_votes:
                     ohnologue = anc[:-1] + letter[anc[-1]]
                     if ohnologue in store_votes and store_votes[ohnologue] != "?":
+                        tot.add(anc[:-1])
                         winner_ohno = store_votes[ohnologue]
                         winner = winner_ohno[:-1] + letter[winner_ohno[-1].upper()].lower()
                         outfile.write(line.strip()+'\t'+winner+'\n')
+        if verbose:
+            print(f'{maj} ******{len(tot)}\n')
 
 if __name__ == '__main__':
     PARSER = argparse.ArgumentParser(description=__doc__,

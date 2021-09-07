@@ -9,6 +9,7 @@
 
 import argparse
 from collections import Counter, OrderedDict
+import random
 from itertools import product
 
 from scripts.synteny.mygenome import Genome
@@ -30,6 +31,9 @@ def load_nakatani_segments(seg_file, agg=True):
     Returns:
 
         (dict) : for each defined genomic interval (key) its ancestral pre-dup chromosome (value)
+
+    Raises:
+        Assertion error if any overlapping or unsorted input intervals
     """
 
     dseg = OrderedDict()
@@ -164,6 +168,7 @@ def load_ohnologs(ancg_file, genes):
     """
 
     d_ohno = {}
+    d_anc = {}
     prev_anc = ""
 
     with open(ancg_file, 'r') as infile:
@@ -176,6 +181,9 @@ def load_ohnologs(ancg_file, genes):
 
             target_descendants = genes.intersection(descendants)
 
+            for gene in target_descendants:
+                d_anc[gene] = anc
+
             if prev_anc and anc == prev_anc:
 
                 for (ohno1, ohno2) in product(target_descendants, prev_target_descendants):
@@ -187,10 +195,10 @@ def load_ohnologs(ancg_file, genes):
             prev_anc = anc
             prev_target_descendants = target_descendants
 
-    return d_ohno
+    return d_ohno, d_anc
 
 
-def update_color(dcolor, ohnologs, seg_anc_chr, anc_chr, cutoff):
+def update_color(dcolor, ohnologs, seg_anc_chr, anc_chr, cutoff, summary, d_anc=None):
 
     """
     Updates paralogous segments.
@@ -216,7 +224,7 @@ def update_color(dcolor, ohnologs, seg_anc_chr, anc_chr, cutoff):
 
     for sg in first_step:
         ohnologous_seg = {}
-        genes = [k for k in seg_anc_chr if seg_anc_chr[k] == sg]
+        genes = {k for k in seg_anc_chr if seg_anc_chr[k] == sg}
 
         for gene in genes:
 
@@ -231,16 +239,30 @@ def update_color(dcolor, ohnologs, seg_anc_chr, anc_chr, cutoff):
                     ohnologous_seg[all_seg[0]] = ohnologous_seg.get(all_seg[0], 0) + 1
 
         counts = Counter(ohnologous_seg)
-        anc, letter = dcolor[sg]
+        anc, letter, _ = dcolor[sg]
         letter = ohnoletter[letter]
+
 
         for seg in counts:
             genes_ohno = [k for k in seg_anc_chr if seg_anc_chr[k] == seg]
             min_genes = min(len(genes), len(genes_ohno))
 
+            if counts[seg]/min_genes >= cutoff and seg in dcolor and seg != sg:
+
+                if dcolor[seg][:2] != [anc, letter]:
+
+                    print([anc, letter, counts[seg]/min_genes], dcolor[seg], seg, sg)
+
             if counts[seg]/min_genes >= cutoff and seg not in dcolor and anc_chr[seg] == anc:
 
-                dcolor[seg] = [anc, letter]
+                dcolor[seg] = [anc, letter, counts[seg]/min_genes]
+
+                if d_anc:
+                    a = {d_anc[i] for i in genes_ohno if i in d_anc}
+                    for ancg in a:
+                        summary[ancg] = counts[seg]/min_genes
+
+
 
 
 
@@ -266,6 +288,9 @@ if __name__ == '__main__':
     PARSER.add_argument('-f', '--genesformat', type=str, required=False,
                         default='bed')
 
+    PARSER.add_argument('--random_start', action='store_true',
+                        help='randomize the seed region instead of taking the longest')
+
     ARGS = vars(PARSER.parse_args())
 
     ANC_CHR = load_nakatani_segments(ARGS["ancestral_seg"])
@@ -274,34 +299,53 @@ if __name__ == '__main__':
 
     GENES_ANC_CHR = genes_to_segments(GENES, ANC_CHR)
 
-    OHNOLOGS = load_ohnologs(ARGS["ancestral_genes"], set(GENES_ANC_CHR.keys()))
+    OHNOLOGS, D_ANC = load_ohnologs(ARGS["ancestral_genes"], set(GENES_ANC_CHR.keys()))
 
     #identify the largest block for each ancestral chromosome
     COLORS = {}
+    SUMMARY = {}
     USED = []
     for ANC in ANC_CHR.values():
+
         segments = {s for s in ANC_CHR if ANC_CHR[s] == ANC}
-        max_value = 0
-        for s in segments:
-            l = len({k for k in GENES_ANC_CHR if GENES_ANC_CHR[k] == s})
 
-            if l > max_value:
-                max_segment = s
-                max_value = l
+        if not ARGS["random_start"]:
 
-        if max_value:
-            COLORS[max_segment] = [ANC, 'a']
+            max_value = 0
+
+            for s in segments:
+                l = len({k for k in GENES_ANC_CHR if GENES_ANC_CHR[k] == s})
+
+                if l > max_value:
+                    max_segment = s
+                    max_value = l
+
+            assert max_value
+            COLORS[max_segment] = [ANC, 'a', 'init']
             USED.append((max_segment))
+
+        else:
+            random_letter = random.sample(["a", "b"], 1)[0]
+            random_segment = random.sample(list(segments), 1)[0]
+            COLORS[random_segment] = [ANC, random_letter, 'init']
+            USED.append((random_segment))
+
 
     #we update paralogous segments step by step
     #we search for segments sharing paralogous genes, iteratively relaxing constraints
     for min_prop in [0.5, 0.4, 0.3, 0.2, 0.1, 0.05]:
         for i in range(10):
-            update_color(COLORS, OHNOLOGS, GENES_ANC_CHR, ANC_CHR, min_prop)
+            update_color(COLORS, OHNOLOGS, GENES_ANC_CHR, ANC_CHR, min_prop, SUMMARY, D_ANC)
+
+    print('--')
+
+    for v in set(SUMMARY.values()):
+        print(v, ','.join(list({i for i in SUMMARY if SUMMARY[i]==v})))
+    print(len(SUMMARY))
 
     GENES = genes_to_segments(GENES, COLORS, transform=True)
 
     with open(ARGS["outfile"], 'w') as fw:
         for name in GENES:
-            col = ''.join(GENES[name])
+            col = ''.join(GENES[name][:2])
             fw.write(name+'\t'+col+'\n')

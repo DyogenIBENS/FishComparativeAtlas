@@ -13,8 +13,20 @@ config["prune_ancestor"] = config.get("prune_ancestor", "Neopterygii")
 REF_SPECIES = ["Oryzias.latipes", "Gasterosteus.aculeatus", "Tetraodon.nigroviridis", "Danio.rerio"]
 SEGMENTS = config.get("seg", "data/MacrosyntenyTGD/Results/K=13/{ref_species}.seg.txt")
 SEGMENTS_OK = config.get("seg_ok", "data/MacrosyntenyTGD/Results/K=13/{ref_species}_ok.seg.txt")
+SEGMENTS_FINAL = config.get("seg_final", "data/MacrosyntenyTGD/Results/K=13/{ref_species}_final.seg.txt")
 GENES = config["genes"]
+RENAME_CHROMS = config.get("rename_chr", None)
 
+#start from pre-computed ancgenes if provided (otherwise we'll extract them from the trees)
+if not config.get("random_start", False):
+    ANCGENES = f'{config["jobname"]}/TGD_ancGenes.tsv'
+else:
+    ANCGENES = config["ancgenes"]
+
+random_arg = ''
+RANDOM_START = config.get("random_start", False)
+if RANDOM_START:
+    random_arg += "--random_start"
 
 rule all:
     """
@@ -56,10 +68,33 @@ rule extract_duplicated_ancGenes:
     Extracts all post-duplication ancgenes in the input gene trees.
     """
     input: trees = config.get("forest", 'test'), sptree = config["species_tree"]
-    output: f'{config["jobname"]}/TGD_ancGenes.tsv'
+    output: ANCGENES
     shell:
         "python src/get_post_dup_ancgenes.py -t {input.trees} -d {config[ancestor]} "
         "-s {input.sptree} -o {output} --check_root"
+
+
+rule rename_anc_chr:
+    """
+    #Rename ancestral chromosome in input data (Nakatani & McLysaght 2017) to be consistent with
+    published Figures.
+    """
+    input: segments = SEGMENTS_OK
+    output: segments = SEGMENTS_FINAL
+    params: rename = RENAME_CHROMS
+    run:
+        if params.rename is None:
+            shell(f"cp {input.segments} {output.segments}")
+
+        else:
+            with open(params.rename, 'r') as infile:
+                d = {line.strip().split()[0]:line.strip().split()[1] for line in infile}
+
+            with open(input.segments, 'r') as infile, open(output.segments, 'w') as out:
+                for line in infile:
+                    ch, start, stop, anc_chr = line.strip().split('\t')
+                    anc_chr = d[anc_chr]
+                    out.write('\t'.join([ch, start, stop, anc_chr])+'\n')
 
 
 rule color_each_reference:
@@ -67,11 +102,11 @@ rule color_each_reference:
     Identifies paralogous duplicated segments within each of the 4 reference species.
     Uses paralogous genes in input gene trees and pre-TGD segments.
     """
-    input: segments = SEGMENTS_OK, genes = GENES, ancGenes = f'{config["jobname"]}/TGD_ancGenes.tsv'
+    input: segments = SEGMENTS_FINAL, genes = GENES, ancGenes = ANCGENES
     output: f'{config["jobname"]}/{{ref_species}}_colors.txt'
     shell:
         "python src/color_reference_species.py -seg {input.segments} -g {input.genes} "
-        "-ag {input.ancGenes} -o {output} -f {config[format]}"
+        "-ag {input.ancGenes} -o {output} -f {config[format]} {random_arg}"
 
 
 #TODO: touching a single output was simpler to implement in snakemake but we can do better
@@ -84,7 +119,7 @@ rule homogenize_references_ab:
         ref_colors = expand(f'{config["jobname"]}/{{ref_species}}_colors.txt',
                               ref_species=REF_SPECIES),
         genes = expand(GENES, ref_species=REF_SPECIES),
-        ancGenes = f'{config["jobname"]}/TGD_ancGenes.tsv'
+        ancGenes = ANCGENES
     output: f'{config["jobname"]}/touched_file'
     params: guide = "Gasterosteus.aculeatus"
     shell:
@@ -99,7 +134,7 @@ rule consensus_color_ancGene:
     """
     input: ref_colors = f'{config["jobname"]}/touched_file',
            genes = expand(GENES, ref_species=REF_SPECIES),
-           ancGenes = f'{config["jobname"]}/TGD_ancGenes.tsv'
+           ancGenes = ANCGENES
 
     output: f'{config["jobname"]}/colored_TGD_ancGenes.tsv'
 

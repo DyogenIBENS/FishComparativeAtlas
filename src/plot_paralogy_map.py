@@ -27,7 +27,7 @@ from matplotlib.colors import is_color_like
 import seaborn as sns
 
 from order_chrom import ORDER_CHROM
-from palette import PALETTE, REORDER_CHROMS
+from palette import PALETTE
 
 from scripts.synteny.mygenome import Genome
 
@@ -74,8 +74,9 @@ def read_ancgenes_colors(file_anc_colors, genes, anc=False, species='', out=''):
             descendants = descendants.split()
 
             if anc:
-                genes_anc[ancgene] = anc_chr
-                continue
+                if anc_chr != '?':
+                    genes_anc[ancgene] = anc_chr
+                    continue
 
             if anc_chr != '?':
 
@@ -465,7 +466,7 @@ if __name__ == '__main__':
         PALETTE_NEW = {}
         for val in GENES_COL.values():
             if val != '?':
-                new_val = str(REORDER_CHROMS[int(val[:-1])]) + val[-1]
+                new_val = val
                 GENES[new_val] = {i for i in GENES_COL if GENES_COL[i] == val}
                 PALETTE_NEW[new_val] = PALETTE[val]
         draw_anc(GENES, ORDER_CHROM, ARGS["species_name"],
@@ -482,14 +483,14 @@ if __name__ == '__main__':
         #             print(val)
         #             seen.append(val)
 
-        #             # new_val = str(reorder_chroms[int(val[:-1])]) + val[-1]
-        #             GENES[str(reorder_chroms[val])+'b'] = {'_'.join(i.split('_')[:-1]) for i in GENES_COL if GENES_COL[i][:-1] and int(GENES_COL[i][:-1])==val}
-        #             GENES[str(reorder_chroms[val])+'a'] = GENES[str(reorder_chroms[val])+'b']
-        #             PALETTE_NEW[str(reorder_chroms[val])+'a'] = PALETTE[str(val)+'a']
-        #             PALETTE_NEW[str(reorder_chroms[val])+'b'] = PALETTE[str(val)+'b']
-        draw_anc(GENES, ORDER_CHROM, ARGS["species_name"],
-                 ARGS["output_file"], PALETTE_NEW, min_length=ARGS["min_length"],
-                 max_chr=ARGS["max_chr"], title=ARGS["title"], sort_by=ARGS["sort_by"],
-                 save=ARGS['save'])
+        #             # new_val = str(REORDER_CHROMS[int(val[:-1])]) + val[-1]
+        #             GENES[str(REORDER_CHROMS[val])+'b'] = {'_'.join(i.split('_')[:-1]) for i in GENES_COL if GENES_COL[i][:-1] and int(GENES_COL[i][:-1])==val}
+        #             GENES[str(REORDER_CHROMS[val])+'a'] = GENES[str(REORDER_CHROMS[val])+'b']
+        #             PALETTE_NEW[str(REORDER_CHROMS[val])+'a'] = PALETTE[str(val)+'a']
+        #             PALETTE_NEW[str(REORDER_CHROMS[val])+'b'] = PALETTE[str(val)+'b']
+        # draw_anc(GENES, ORDER_CHROM, ARGS["species_name"],
+        #          ARGS["output_file"], PALETTE_NEW, min_length=ARGS["min_length"],
+        #          max_chr=ARGS["max_chr"], title=ARGS["title"], sort_by=ARGS["sort_by"],
+        #          save=ARGS['save'])
     #TODO: option to draw pre and post duplication chromosomes -
     #-> generalized funtion instead of ugly hack above

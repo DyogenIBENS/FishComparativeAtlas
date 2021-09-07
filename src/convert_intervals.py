@@ -63,6 +63,12 @@ def load_id_conversion(input_file, genes_set):
     Return:
         dict: conversion dict
 
+    Note:
+        This works here but is a bit tricky. Since ensembl conversion id history is sorted by
+        release and I took the conversion file at the release of interest, I load here the latest
+        used converted gene ID. However, it may have been retired after a certain release and as
+        such it will not exist in `genes_set` --> in this case I do not load the conversion.
+
     """
 
     convert = {}
@@ -215,7 +221,6 @@ def write_converted_seg(dgenes, dgenes_seg_conv, out, dseg=None):
 
                     if prev_chrom and prev_chrom == chroms:
                         prev_reg = (max(int(start), int(prev_end)+1), end, lg_old, chrome, anc)
-
                         continue
                 
                 if prev_reg:
