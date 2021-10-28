@@ -100,7 +100,7 @@ def check_order_and_overlap(dseg, agg=True):
             else:
                 interval_list += [interval[1], interval[2]]
         else:
-            print(interval_list)
+            # print(interval_list)
             assert interval_list == sorted(interval_list), f"Intervals in input file are either "
             "unordered or overlapping, please check your input file (Error raised for chr {chrom})"
             interval_list = []
@@ -242,16 +242,15 @@ def update_color(dcolor, ohnologs, seg_anc_chr, anc_chr, cutoff, summary, d_anc=
         anc, letter, _ = dcolor[sg]
         letter = ohnoletter[letter]
 
-
         for seg in counts:
             genes_ohno = [k for k in seg_anc_chr if seg_anc_chr[k] == seg]
             min_genes = min(len(genes), len(genes_ohno))
 
-            if counts[seg]/min_genes >= cutoff and seg in dcolor and seg != sg:
+            # if counts[seg]/min_genes >= cutoff and seg in dcolor and seg != sg:
 
-                if dcolor[seg][:2] != [anc, letter]:
+                # if dcolor[seg][:2] != [anc, letter]:
 
-                    print([anc, letter, counts[seg]/min_genes], dcolor[seg], seg, sg)
+                #     print([anc, letter, counts[seg]/min_genes], dcolor[seg], seg, sg)
 
             if counts[seg]/min_genes >= cutoff and seg not in dcolor and anc_chr[seg] == anc:
 
@@ -291,6 +290,9 @@ if __name__ == '__main__':
     PARSER.add_argument('--random_start', action='store_true',
                         help='randomize the seed region instead of taking the longest')
 
+    PARSER.add_argument('--write_segments', action='store_true',
+                        help='also writes segments to post TGD chromosome assignments')
+
     ARGS = vars(PARSER.parse_args())
 
     ANC_CHR = load_nakatani_segments(ARGS["ancestral_seg"])
@@ -301,7 +303,6 @@ if __name__ == '__main__':
 
     OHNOLOGS, D_ANC = load_ohnologs(ARGS["ancestral_genes"], set(GENES_ANC_CHR.keys()))
 
-    #identify the largest block for each ancestral chromosome
     COLORS = {}
     SUMMARY = {}
     USED = []
@@ -309,6 +310,7 @@ if __name__ == '__main__':
 
         segments = {s for s in ANC_CHR if ANC_CHR[s] == ANC}
 
+        #identify the largest block for each ancestral chromosome
         if not ARGS["random_start"]:
 
             max_value = 0
@@ -337,15 +339,37 @@ if __name__ == '__main__':
         for i in range(10):
             update_color(COLORS, OHNOLOGS, GENES_ANC_CHR, ANC_CHR, min_prop, SUMMARY, D_ANC)
 
-    print('--')
+    # print('--')
 
-    for v in set(SUMMARY.values()):
-        print(v, ','.join(list({i for i in SUMMARY if SUMMARY[i]==v})))
-    print(len(SUMMARY))
+    # for v in set(SUMMARY.values()):
+    #     print(v, ','.join(list({i for i in SUMMARY if SUMMARY[i]==v})))
+    # print(len(SUMMARY))
 
-    GENES = genes_to_segments(GENES, COLORS, transform=True)
+    GENESA = genes_to_segments(GENES, COLORS, transform=True)
 
     with open(ARGS["outfile"], 'w') as fw:
-        for name in GENES:
-            col = ''.join(GENES[name][:2])
+        for name in GENESA:
+            col = ''.join(GENESA[name][:2])
             fw.write(name+'\t'+col+'\n')
+
+    if ARGS["write_segments"]:
+        SEGS = genes_to_segments(GENES, COLORS, transform=False)
+        new_d = {}
+        seen = []
+        for gene in SEGS:
+            seg = SEGS[gene]
+
+            if seg in seen:
+                continue
+
+            col = ''.join(GENESA[gene][:2])
+            seen.append(seg)
+            chrom = seg[0]
+            for interval in seg[1:]:
+
+                new_key = str(chrom)+'\t'+'\t'.join([str(i) for i in interval])
+                new_d[new_key] = col
+
+        with open(ARGS["outfile"]+'_genomic', 'w') as fw:
+            for seg in new_d:
+                fw.write(seg+'\t'+new_d[seg]+'\n')

@@ -86,7 +86,6 @@ def color_ancgenes(colors, genes, ancgenes, output, propagate=True, verbose=Fals
 
                 if not ex_aequo:
 
-                    #TODO remove hard_coded index below
                     store_votes[anc] = winner
 
                     outfile.write(line.strip()+'\t'+winner+'\n')
@@ -135,6 +134,8 @@ if __name__ == '__main__':
 
     PARSER.add_argument('-dp', '--dont_propagate', action='store_false')
 
+    PARSER.add_argument('--verbose', action='store_true')
+
     ARGS = vars(PARSER.parse_args())
 
     GENES = {}
@@ -146,4 +147,4 @@ if __name__ == '__main__':
 
         GENES[ref_col_file] = {g.names[0] for g in Genome(genes_file, ARGS["genesformat"])}
 
-    color_ancgenes(COLORS, GENES, ARGS["ancestral_genes"], ARGS["output"], ARGS["dont_propagate"])
+    color_ancgenes(COLORS, GENES, ARGS["ancestral_genes"], ARGS["output"], ARGS["dont_propagate"], ARGS["verbose"])

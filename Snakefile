@@ -211,6 +211,3 @@ else:
             "python src/draw_species_tree_stats.py -i {input.stats} -s {config[species_tree]} "
             "-ob {output.boxplots} -os {output.sptree} -a {config[prune_ancestor]} "
             "-da {config[ancestor]}"
-
-# rule compare_zfin:
-# rule plot_zfin:
