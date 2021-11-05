@@ -13,7 +13,7 @@ import argparse
 from collections import defaultdict
 import operator
 
-from scripts.synteny.mygenome import Genome
+from mygenome import Genome
 
 from homogenize_refs_colors import read_reference_colors
 

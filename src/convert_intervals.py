@@ -7,7 +7,7 @@ import argparse
 from collections import OrderedDict
 from itertools import chain
 
-from scripts.synteny.mygenome import Genome
+from mygenome import Genome
 from color_reference_species import load_nakatani_segments
 
 

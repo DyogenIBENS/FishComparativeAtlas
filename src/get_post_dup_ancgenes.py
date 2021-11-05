@@ -11,10 +11,89 @@ import argparse
 from collections import OrderedDict
 from ete3 import Tree
 
-from scripts.synteny.duplicated_families import tag_duplicated_species
-from scripts.trees.speciestree import get_species, get_anc_order
-from scripts.trees.orthologs import is_speciation
-from scripts.trees.utilities import read_multiple_objects
+from speciestree import get_species, get_anc_order
+
+
+def is_speciation(node):
+
+    """
+    Is the node a speciation node?
+
+    Args:
+        tree (ete3.TreeNode): input node, with duplications annotated with the `D` attribute.
+                              D=Y if duplication, D=N otherwise. Note that dubious nodes
+                              (DD=Y or DCS=0) are considered speciation nodes.
+
+    Returns:
+        bool: True if speciation, False otherwise.
+
+    """
+
+    speciation = False
+
+    if (hasattr(node, "D") and node.D == 'N'):
+        speciation = True
+
+    elif (hasattr(node, "DD") and node.DD == 'Y'):
+        speciation = True
+
+    elif (hasattr(node, "DCS") and float(node.DCS) == 0.0):
+        speciation = True
+
+    return speciation
+
+
+def tag_duplicated_species(leaves, duplicated):
+
+    """
+    Adds a tag to genes of duplicated species in an ete3.Tree instance, in-place.
+
+    Args:
+        leaves (list of ete3.TreeNode): leaves of the tree
+        duplicated (list of str): list of the names of all duplicated species
+    """
+
+    for leaf in leaves:
+
+        if leaf.S in duplicated:
+            leaf.add_features(duplicated='Y')
+
+        else:
+            leaf.add_features(duplicated='N')
+
+
+def read_multiple_objects(file_object, sep="//"):
+
+    """
+    Creates a generator to read a file with several entries (trees, alignments, or other...) one
+    by one.
+
+    Args:
+        file_object (file): python file object of the input file
+        sep (str, optional): the separator between entries
+
+    Yields:
+        str : the next tree (or alignment).
+    """
+
+    data = ""
+    while True:
+
+        line = file_object.readline()
+
+        #don't forget to yield even if no separator at the end of file
+        if not line:
+            if data:
+                yield data
+            break
+
+        #yield stored data each time we see the separator
+        if line.strip() == sep:
+            yield data
+            data = ""
+
+        else:
+            data += line
 
 
 def write_post_dup_ancgenes(input_forest, duplicated_species, out, outgr=None, ancg="ancGene_TGD_",

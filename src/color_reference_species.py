@@ -12,7 +12,7 @@ from collections import Counter, OrderedDict
 import random
 from itertools import product
 
-from scripts.synteny.mygenome import Genome
+from mygenome import Genome
 
 def load_nakatani_segments(seg_file, agg=True):
 

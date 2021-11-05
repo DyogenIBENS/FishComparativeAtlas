@@ -28,7 +28,7 @@ import seaborn as sns
 from order_chrom import ORDER_CHROM
 from palette import PALETTE
 
-from scripts.synteny.mygenome import Genome
+from mygenome import Genome
 
 
 def read_ancgenes_colors(file_anc_colors, genes, anc=False, species='', out=''):

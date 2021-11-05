@@ -13,7 +13,7 @@
 
 import argparse
 
-from scripts.synteny.mygenome import Genome
+from mygenome import Genome
 
 
 def read_reference_colors(file_ref_colors):
