@@ -147,4 +147,5 @@ if __name__ == '__main__':
 
         GENES[ref_col_file] = {g.names[0] for g in Genome(genes_file, ARGS["genesformat"])}
 
-    color_ancgenes(COLORS, GENES, ARGS["ancestral_genes"], ARGS["output"], ARGS["dont_propagate"], ARGS["verbose"])
+    color_ancgenes(COLORS, GENES, ARGS["ancestral_genes"], ARGS["output"], ARGS["dont_propagate"],\
+                   ARGS["verbose"])

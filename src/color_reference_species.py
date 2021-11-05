@@ -101,10 +101,8 @@ def check_order_and_overlap(dseg, agg=True):
                 interval_list += [interval[1], interval[2]]
         else:
             # print(interval_list)
-            assert interval_list == sorted(interval_list), f"Intervals in input file are either "
+            assert interval_list == sorted(interval_list), f"Intervals in input file are either "\
             "unordered or overlapping, please check your input file (Error raised for chr {chrom})"
-            interval_list = []
-
 
 def genes_to_segments(dgenes, dseg, transform=False):
 
@@ -131,10 +129,10 @@ def genes_to_segments(dgenes, dseg, transform=False):
 
     dgenes_seg = {}
 
-    for chromosome in dgenes.genes_list:
+    for my_chrom in dgenes.genes_list:
 
-        for gene in dgenes.genes_list[chromosome]:
-            chrom = str(chromosome)
+        for gene in dgenes.genes_list[my_chrom]:
+            chrom = str(my_chrom)
             chrom = chrom.replace("group", "")
 
             assert gene.beginning < gene.end, "Start > Stop, check"
@@ -257,8 +255,8 @@ def update_color(dcolor, ohnologs, seg_anc_chr, anc_chr, cutoff, summary, d_anc=
                 dcolor[seg] = [anc, letter, counts[seg]/min_genes]
 
                 if d_anc:
-                    a = {d_anc[i] for i in genes_ohno if i in d_anc}
-                    for ancg in a:
+                    ancgenes = {d_anc[i] for i in genes_ohno if i in d_anc}
+                    for ancg in ancgenes:
                         summary[ancg] = counts[seg]/min_genes
 
 
@@ -354,22 +352,22 @@ if __name__ == '__main__':
 
     if ARGS["write_segments"]:
         SEGS = genes_to_segments(GENES, COLORS, transform=False)
-        new_d = {}
-        seen = []
-        for gene in SEGS:
-            seg = SEGS[gene]
+        NEW_D = {}
+        SEEN = []
+        for my_gene in SEGS:
+            my_seg = SEGS[my_gene]
 
-            if seg in seen:
+            if my_seg in SEEN:
                 continue
 
-            col = ''.join(GENESA[gene][:2])
-            seen.append(seg)
-            chrom = seg[0]
-            for interval in seg[1:]:
+            col = ''.join(GENESA[my_gene][:2])
+            SEEN.append(my_seg)
+            chromosome = my_seg[0]
+            for my_interval in my_seg[1:]:
 
-                new_key = str(chrom)+'\t'+'\t'.join([str(i) for i in interval])
-                new_d[new_key] = col
+                new_key = str(chromosome)+'\t'+'\t'.join([str(i) for i in my_interval])
+                NEW_D[new_key] = col
 
         with open(ARGS["outfile"]+'_genomic', 'w') as fw:
-            for seg in new_d:
-                fw.write(seg+'\t'+new_d[seg]+'\n')
+            for my_seg in NEW_D:
+                fw.write(my_seg+'\t'+NEW_D[my_seg]+'\n')

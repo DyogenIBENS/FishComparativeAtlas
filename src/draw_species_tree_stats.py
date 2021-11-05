@@ -12,12 +12,14 @@ PM_Genofish_GENOMICUSV3/out_newPM_Genofish_GENOMICUSV3_nocorr/out_new  -l
 
 import argparse
 
-from ete3 import Tree, TreeStyle, NodeStyle, TextFace
-
 import seaborn as sns
 import matplotlib.pyplot as plt
 import matplotlib
 import pandas as pd
+
+from ete3 import Tree, TreeStyle, NodeStyle, TextFace
+
+
 
 sns.set_palette("muted")
 

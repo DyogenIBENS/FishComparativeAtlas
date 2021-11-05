@@ -15,7 +15,6 @@
 # -t "4R sequence/synteny conflicts --save
 
 import sys
-import os
 import argparse
 import pickle
 from pathlib import Path
@@ -484,7 +483,8 @@ if __name__ == '__main__':
         #             seen.append(val)
 
         #             # new_val = str(REORDER_CHROMS[int(val[:-1])]) + val[-1]
-        #             GENES[str(REORDER_CHROMS[val])+'b'] = {'_'.join(i.split('_')[:-1]) for i in GENES_COL if GENES_COL[i][:-1] and int(GENES_COL[i][:-1])==val}
+        #             GENES[str(REORDER_CHROMS[val])+'b'] = {'_'.join(i.split('_')[:-1]) for i in\
+        #             GENES_COL if GENES_COL[i][:-1] and int(GENES_COL[i][:-1])==val}
         #             GENES[str(REORDER_CHROMS[val])+'a'] = GENES[str(REORDER_CHROMS[val])+'b']
         #             PALETTE_NEW[str(REORDER_CHROMS[val])+'a'] = PALETTE[str(val)+'a']
         #             PALETTE_NEW[str(REORDER_CHROMS[val])+'b'] = PALETTE[str(val)+'b']

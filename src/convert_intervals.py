@@ -222,7 +222,7 @@ def write_converted_seg(dgenes, dgenes_seg_conv, out, dseg=None):
                     if prev_chrom and prev_chrom == chroms:
                         prev_reg = (max(int(start), int(prev_end)+1), end, lg_old, chrome, anc)
                         continue
-                
+
                 if prev_reg:
                     p_end = min(prev_reg[1], end)
                     if p_end - prev_reg[0] <= 1.20 * prev_reg[2]:
