@@ -8,3 +8,4 @@ analysis/*
 config*
 data/
 !data/example/
+!config_example*
