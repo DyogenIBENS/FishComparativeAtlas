@@ -1,5 +1,5 @@
 """
-    Script to segment modern species genome with respect to post-TGD chromosomes, based on gene
+    Script to segment modern species genomes with respect to post-TGD chromosomes, based on gene
     trees and pre-TGD ancestral reconstruction.
 
     Example:
@@ -13,6 +13,7 @@ import random
 from itertools import product
 
 from mygenome import Genome
+
 
 def load_nakatani_segments(seg_file, agg=True):
 
