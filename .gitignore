@@ -8,5 +8,5 @@ interval_conversion/
 analysis/*
 config*
 data/
-!data/example/
+!data/example/*
 !config_example.yaml
