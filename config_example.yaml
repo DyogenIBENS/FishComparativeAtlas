@@ -13,7 +13,7 @@ ancestor: "Clupeocephala"
 
 #gene trees in .nhx (alternatively post-duplication families can be provided as ancgenes)
 #required NHX tags are D (D=Y for duplications) and S for extant AND ancestral species
-forest:  "data/example/SCORPiOs_ens89_corrected_forest_rec.nhx"
+forest:  "data/example/SCORPiOs_ens89_corrected_forest.nhx"
 
 #To start from pre-computed ancgenes instead of trees
 # ancgenes: "data/example/TGD_ancGenes.tsv"
@@ -25,12 +25,13 @@ format: "bed" #alternatively can be dyogen format
 #------------------------------------- INTERVAL CONVERSION -------------------------------------#
 
 #if pre-WGD chromosome annotations need to be converted to a more recent genome version
-genes_conv:
-  Danio.rerio: "data/example/data75.genesST.Danio.rerio.list.bz2" #genes in the initial data
-  Oryzias.latipes: "data/example/data75.genesST.Oryzias.latipes.list.bz2"
+genes_conv: #genes in the initial data
+  Danio.rerio: "data/example/assembly_conv/data75.genesST.Danio.rerio.list.bz2" 
+  Oryzias.latipes: "data/example/assembly_conv/data75.genesST.Oryzias.latipes.list.bz2"
 gconv_format: "dyogen"
 
-gene_id_conv: data/example/ensembl_id_history_{ref_species}_raw.csv #gene id history from ensembl
+#gene id history from ensembl
+gene_id_conv: data/example/assembly_conv/ensembl_id_history_{ref_species}_raw.csv 
 
 #-------------------------------------------- PLOTS --------------------------------------------#
 
