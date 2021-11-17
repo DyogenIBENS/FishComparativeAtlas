@@ -43,7 +43,7 @@ mamba env create -f envs/fish_atlas.yaml
 conda activate fish_atlas
 ```
 
-- Run on toy example data (10 teleost genomes, ~ 5 minutes):
+- Run on toy example data (10 teleost genomes, ~ 3 minutes):
 ```
 snakemake --configfile config_example.yaml --cores 4
 ```
