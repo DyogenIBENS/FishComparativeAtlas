@@ -24,7 +24,7 @@
 
 All dependencies are listed in `envs/fish_atlas.yaml` (mainly snakemake, ete3, matpotlib and seaborn).
 
-### Run on example data
+### FishAtlas on example data
 
 - Create the conda environment (this may take a few minutes):
 ```
@@ -48,7 +48,7 @@ snakemake --configfile config_example.yaml --cores 4
 snakemake --configfile config_example.yaml --report report_example.html
 ```
 
-### Run on user-defined data
+### FishAtlas on user-defined data
 
 To run on a user-defined dataset, create a new config file and format your input data following the provided example.
 
