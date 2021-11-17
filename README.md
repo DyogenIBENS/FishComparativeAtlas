@@ -6,6 +6,8 @@
 
   - [Description](#description)
   - [Usage](#usage)
+  - [Authors](#authors)
+  - [License](#license)
   - [References](#references)
 
 ## Description
@@ -50,8 +52,22 @@ snakemake --configfile config_example.yaml --report report_example.html
 
 - To run on a user-defined dataset, create a new config file and format your input data following the provided example.
 
+## Authors
+
+* [**Elise Parey**](mailto:elise.parey@bio.ens.psl.eu)
+* **Alexandra Louis**
+* **Hugues Roest Crollius**
+* **Camille Berthelot**
+
+## License
+
+This code may be freely distributed and modified under the terms of the GNU General Public License version 3 (GPL v3) and the CeCILL licence version 2 of the CNRS:
+
+- [LICENSE-GPLv3.txt](LICENSE-GPLv3.txt)
+- [LICENSE-CeCILL.txt](LICENSE-CeCILLv2.txt)
+
 ## References
 
 FishAtlas takes as input the pre-TGD ancestral chromosomes predictions from:
 
-- [(Nakatani and McLysaght 2017)](https://academic.oup.com/bioinformatics/article/33/14/i369/3953974): Nakatani Y, McLysaght A. 2017. Genomes as documents of evolutionary history: a probabilistic macrosynteny model for the reconstruction of ancestral genomes. Bioinformatics 33:i369–i378.
+- [Nakatani and McLysaght 2017](https://academic.oup.com/bioinformatics/article/33/14/i369/3953974): Nakatani Y, McLysaght A. 2017. Genomes as documents of evolutionary history: a probabilistic macrosynteny model for the reconstruction of ancestral genomes. Bioinformatics 33:i369–i378.
