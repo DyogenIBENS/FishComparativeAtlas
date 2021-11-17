@@ -8,7 +8,7 @@ from collections import OrderedDict
 from itertools import chain
 
 from mygenome import Genome
-from color_reference_species import load_nakatani_segments
+from color_reference_species import load_segments
 
 
 def segments_to_genes(dgenes, dseg):
@@ -244,8 +244,7 @@ if __name__ == '__main__':
     PARSER.add_argument('-g', '--genes', nargs='+', help='Genes files, first old ids then new',
                         required=True)
 
-    PARSER.add_argument('-seg', '--ancestral_seg', type=str, help='Nakatani et al. ancestral'
-                        'chromosomes prediction file', required=True)
+    PARSER.add_argument('-seg', '--ancestral_seg', type=str,, required=True)
 
     PARSER.add_argument('-id', '--history_ids', type=str, help='Ensembl CONVERT_ID file',
                         required=True)
@@ -260,7 +259,7 @@ if __name__ == '__main__':
 
     assert len(ARGS["genes"]) == 2, "Error: two genes files should be provided, please check"
 
-    SEG = load_nakatani_segments(ARGS["ancestral_seg"], agg=False)
+    SEG = load_segments(ARGS["ancestral_seg"], agg=False)
 
     if len(ARGS["genesformat"]) == 1:
         ARGS["genesformat"].append(ARGS["genesformat"][0])

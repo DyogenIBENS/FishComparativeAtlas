@@ -110,7 +110,7 @@ def draw_colors(dgenes, order, genes_colors, species, out, palette=None, min_len
     Args:
         dgenes (Genome.genes_list): genome to plot
 
-        order (dict): pre-assigned chromosomes order based on Figures in Nakatani and McLysaght
+        order (dict): pre-assigned chromosomes order
 
         genes_colors (dict): for each gene (key) its predicted post-duplication chromosomes (value)
 
@@ -238,7 +238,7 @@ def draw_anc(dgenes, order, species, out, palette, min_length=30, max_chr=30,\
     Args:
         dgenes (Genome.genes_list): genome to plot
 
-        order (dict): pre-assigned chromosomes order based on Figures in Nakatani and McLysaght
+        order (dict): pre-assigned chromosomes order based
 
         genes_colors (dict): for each gene (key) its predicted post-duplication chromosomes (value)
 

@@ -15,7 +15,7 @@ from itertools import product
 from mygenome import Genome
 
 
-def load_nakatani_segments(seg_file, agg=True):
+def load_segments(seg_file, agg=True):
 
     """
     Loads in a dictionary a segment file (as produced by Nakatani and McLysaght 2017).
@@ -274,8 +274,7 @@ if __name__ == '__main__':
 
     PARSER.add_argument('-g', '--genes', type=str, help='Genes file', required=False, default='')
 
-    PARSER.add_argument('-seg', '--ancestral_seg', type=str, help='Nakatani et al. ancestral\
-                        chromosomes', required=False)
+    PARSER.add_argument('-seg', '--ancestral_seg', type=str, required=False)
 
     PARSER.add_argument('-ag', '--ancestral_genes', type=str, help='post TGD ancgenes file',
                         required=True)
@@ -294,7 +293,7 @@ if __name__ == '__main__':
 
     ARGS = vars(PARSER.parse_args())
 
-    ANC_CHR = load_nakatani_segments(ARGS["ancestral_seg"])
+    ANC_CHR = load_segments(ARGS["ancestral_seg"])
 
     GENES = Genome(ARGS["genes"], ARGS["genesformat"])
 
