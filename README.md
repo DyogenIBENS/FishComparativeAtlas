@@ -1,6 +1,6 @@
 # FishAtlas: build an atlas of WGD-duplicated regions in teleost
 
- [![Snakemake](https://img.shields.io/badge/snakemake-≥5.5.4-brightgreen.svg)](https://snakemake.bitbucket.io) ![Snakemake-Report](https://img.shields.io/badge/snakemake-report-green.svg)
+ [![Snakemake](https://img.shields.io/badge/snakemake-≥5.13-brightgreen.svg)](https://snakemake.bitbucket.io) ![Snakemake-Report](https://img.shields.io/badge/snakemake-report-green.svg)
 
 ## Table of content
 
