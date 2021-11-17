@@ -43,7 +43,7 @@ rule all:
     Target of the workflow:
     an .svg image for each dup species, with their genome colored by post-duplication chromosomes
     """
-    input: f'{OUT}/figures/sptree_stats.svg',
+    input: f'{OUT}/figures/sptree_stats.pdf',
            f'{OUT}/figures/box_stats.svg'
 
 rule extract_duplicated_ancGenes:
@@ -205,7 +205,7 @@ else:
         input: stats = f'{OUT}/out_stats.txt',
 
         output: boxplots = report(f'{OUT}/figures/box_stats.svg', category="Annotation statistics"),
-                sptree = report(f'{OUT}/figures/sptree_stats.svg', category="Annotation statistics")
+                sptree = report(f'{OUT}/figures/sptree_stats.pdf', category="Annotation statistics")
                        
         shell:
             "python src/draw_species_tree_stats.py -i {input.stats} -s {config[species_tree]} "
