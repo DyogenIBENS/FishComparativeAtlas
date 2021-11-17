@@ -1,0 +1,38 @@
+#-------------------------------------------- INPUTS -------------------------------------------#
+#name of the job, to name the output folder (out_+jobname)
+jobname: "example"
+
+#pre-TGD chromosome annotations available for a subset of genome
+pre_dup_segments: "data/MacrosyntenyTGD/{ref_species}.seg.txt"
+
+#Species tree in .nwk, with ancestor names
+species_tree: "data/example/sptree.nwk"
+
+#First post-TGD ancestor in the species tree
+ancestor: "Clupeocephala"
+
+#gene trees in .nhx (alternatively post-duplication families can be provided as ancgenes)
+#required NHX tags are D (D=Y for duplications) and S for extant AND ancestral species
+forest:  "data/example/SCORPiOs_ens89_corrected_forest_rec.nhx"
+
+#To start from pre-computed ancgenes instead of trees
+# ancgenes: "data/example/TGD_ancGenes.tsv"
+
+#Genes coordinates: {ref_species} should be kept as a wildcard for species names
+genes: "data/example/genes/genesST.{ref_species}.bed"
+format: "bed" #alternatively can be dyogen format
+
+#------------------------------------- INTERVAL CONVERSION -------------------------------------#
+
+#if pre-WGD chromosome annotations need to be converted to a more recent genome version
+genes_conv:
+  Danio.rerio: "data/example/data75.genesST.Danio.rerio.list.bz2" #genes in the initial data
+  Oryzias.latipes: "data/example/data75.genesST.Oryzias.latipes.list.bz2"
+gconv_format: "dyogen"
+
+gene_id_conv: data/example/ensembl_id_history_{ref_species}_raw.csv #gene id history from ensembl
+
+#-------------------------------------------- PLOTS --------------------------------------------#
+
+prune_ancestor: "Neopterygii"
+rename_chr: "data/example/rename_chr.txt"
