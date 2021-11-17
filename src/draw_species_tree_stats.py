@@ -19,8 +19,6 @@ import pandas as pd
 
 from ete3 import Tree, TreeStyle, NodeStyle, TextFace
 
-
-
 sns.set_palette("muted")
 
 def load_annotation_stats(input_file):

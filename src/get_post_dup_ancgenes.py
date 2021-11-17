@@ -221,8 +221,7 @@ if __name__ == '__main__':
     PARSER.add_argument('-outgr', '--outgr_ortho', help='get orthologs for specified outgroup sp.',\
                         required=False, nargs='+')
 
-    PARSER.add_argument('--add_sp', action='store_true',
-                        help="Add '_' + species name to gene names")
+    PARSER.add_argument('--add_sp', action='store_true', help="Add '_'+species to gene names")
 
     PARSER.add_argument('--check_root', action='store_true',
                         help="Check that tree is rooted above teleost to include it in ancGenes.")
