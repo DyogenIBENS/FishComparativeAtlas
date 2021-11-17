@@ -244,7 +244,7 @@ if __name__ == '__main__':
     PARSER.add_argument('-g', '--genes', nargs='+', help='Genes files, first old ids then new',
                         required=True)
 
-    PARSER.add_argument('-seg', '--ancestral_seg', type=str,, required=True)
+    PARSER.add_argument('-seg', '--ancestral_seg', type=str, required=True)
 
     PARSER.add_argument('-id', '--history_ids', type=str, help='Ensembl CONVERT_ID file',
                         required=True)
