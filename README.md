@@ -3,7 +3,7 @@
  [![Snakemake](https://img.shields.io/badge/snakemake-≥5.13-brightgreen.svg)](https://snakemake.bitbucket.io) ![Snakemake-Report](https://img.shields.io/badge/snakemake-report-green.svg)
 
 
-FishAtlas is a snakemake pipeline to trace the evolution of sister duplicated chromosomes derived from whole genome duplication in teleost genomes.
+FishAtlas is a snakemake pipeline to trace the evolution of sister duplicated chromosomes derived from whole genome duplication (WGD) in teleost genomes.
 
 If you use FishAtlas, please cite [ref](TODO).
 
