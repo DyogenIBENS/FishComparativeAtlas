@@ -96,9 +96,9 @@ def color_ancgenes(colors, genes, ancgenes, output, propagate=True, verbose=Fals
                         voting.add(anc[:-1])
                         maj += 1
 
-                # else:
-                #     store_votes[anc] = "?"
-                #     outfile.write(line.strip()+'\t?\n')
+                else:
+                    store_votes[anc] = "?"
+                    # outfile.write(line.strip()+'\t?\n')
 
 
         #propagate to un-annotated second ancgene copy, if its sister is
