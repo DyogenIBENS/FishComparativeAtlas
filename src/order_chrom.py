@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 """
 Constant variable defintion to draw paralogy maps with chromosome in the same order as in
 (Nakatani and McLysaght 2017).

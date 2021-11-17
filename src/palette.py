@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 """
 Defines a color palette for post-duplication chromosomes.
 """

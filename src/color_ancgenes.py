@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 """
     Script to assign a post-duplication chromosome to ancgenes of the post-duplication ancestor,
     through a majority vote of descedant genes.

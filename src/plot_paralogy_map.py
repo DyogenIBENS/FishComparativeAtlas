@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 """
     Script to draw and color a genome according to an input classification.
     For instance, it can be used to draw post-duplication chromosomes on modern species.

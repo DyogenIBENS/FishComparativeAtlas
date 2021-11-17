@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 """
     Script to homogenize post-duplication chromsomes that have been assigned independently on
     reference species, so that orthologous chromsomes have the same name.

@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 """
 Script to convert input data for the Paralogy Map between genome assemblies.
 """

@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 """
     Script to segment modern species genomes with respect to post-TGD chromosomes, based on gene
     trees and pre-TGD ancestral reconstruction.

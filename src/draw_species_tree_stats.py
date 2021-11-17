@@ -1,13 +1,7 @@
-"""
-TODO docstring
+#!/usr/bin/env python
 
-python src/draw_species_tree_stats.py -i
-PM_Genofish_GENOMICUSV3_noPeri/out
-PM_Genofish_GENOMICUSV3/out_newPM_Genofish_GENOMICUSV3_nocorr/out_new  -l
-"GenomicusV3 + Edition + SCORPiOs" "GenomicusV3 + SCORPiOs" "Genomicus V3"
--s ../SCORPiOs/data/genofish_v3/sptree_without_gobidae.nwk
--ob PM_Genofish_GENOMICUSV3_noPeri/stats_boxplots.svg
--os PM_Genofish_GENOMICUSV3_noPeri/sptree_stats.svg -a Neopterygii -da Osteoglossocephalai
+"""
+TODO
 """
 
 import argparse

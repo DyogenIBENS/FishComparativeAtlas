@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 """
     Script to browse gene trees and extract post-duplication ancGenes.
 
