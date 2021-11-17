@@ -1,4 +1,4 @@
-# FishAtlas: building an atlas of WGD-duplicated regions in teleost genomes
+# FishAtlas: WGD-duplicated regions in teleost genomes
 
  [![Snakemake](https://img.shields.io/badge/snakemake-≥5.13-brightgreen.svg)](https://snakemake.bitbucket.io) ![Snakemake-Report](https://img.shields.io/badge/snakemake-report-green.svg)
 
