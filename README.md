@@ -1,6 +1,11 @@
-# FishAtlas: build an atlas of WGD-duplicated regions in teleost
+# FishAtlas: build an atlas of WGD-duplicated regions in teleosts
 
  [![Snakemake](https://img.shields.io/badge/snakemake-≥5.13-brightgreen.svg)](https://snakemake.bitbucket.io) ![Snakemake-Report](https://img.shields.io/badge/snakemake-report-green.svg)
+
+
+FishAtlas is a snakemake pipeline
+
+If you use FishAtlas, please cite [ref].
 
 ## Table of content
 
@@ -10,18 +15,16 @@
   - [License](#license)
   - [References](#references)
 
+
 ## Description
 
-+Desc
-
-
 FishAtlas takes as input:
-   1. Ancestral chromosomes (pre-TGD) mapped on a subset of 4 teleost genomes (see [examples](data/MacrosyntenyTGD/), from [(Nakatani and McLysaght 2017)](https://academic.oup.com/bioinformatics/article/33/14/i369/3953974)),
+   1. ancestral chromosomes (pre-TGD) mapped on a subset of 4 teleost genomes (see [examples](data/MacrosyntenyTGD/), taken from [Nakatani and McLysaght 2017](https://academic.oup.com/bioinformatics/article/33/14/i369/3953974)),
    2. genes coordinates files for all studied teleosts (see [examples](data/example/genes/)),
    3. gene trees with the genes of all studied teleosts and outgroups (see [examples](data/example/SCORPiOs_ens89_corrected_forest.nhx)),
    4. the corresponding species tree (see [examples](data/example/sptree.nwk)).
 
-The generated fish comparative atlas is provided in a '.tsv' file with 3 columns: the unique identifier of the post-duplication gene family, the genes in all extant teleosts that belong to the family and the predicted post-duplication chromosome (1a, 1b, 2a...).
+The generated fish comparative atlas is provided in a tab-delimited file with 3 columns: the unique identifier of the post-duplication gene family, all extant teleost genes in the family and the predicted post-duplication chromosome (1a, 1b, 2a...), respectively.
 
 ## Usage
 
