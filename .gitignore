@@ -7,6 +7,8 @@ out*/
 interval_conversion/
 analysis/*
 config*
-data/
-!data/example/*
 !config_example.yaml
+!data/
+data/*
+!data/example/
+!data/MacrosyntenyTGD/
