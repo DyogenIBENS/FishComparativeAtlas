@@ -14,19 +14,22 @@
 
 +Desc
 
-+Inputs
 
-+Outputs
-    
-+Figures in report
+FishAtlas takes as input:
+   1. Ancestral chromosomes (pre-TGD) mapped on a subset of 4 teleost genomes (see [examples](data/MacrosyntenyTGD/), from [(Nakatani and McLysaght 2017)](https://academic.oup.com/bioinformatics/article/33/14/i369/3953974)),
+   2. genes coordinates files for all studied teleosts (see [examples](data/example/genes/)),
+   3. gene trees with the genes of all studied teleosts and outgroups (see [examples](data/example/SCORPiOs_ens89_corrected_forest.nhx)),
+   4. the corresponding species tree (see [examples](data/example/sptree.nwk)).
+
+The generated fish comparative atlas is provided in a '.tsv' file with 3 columns: the unique identifier of the post-duplication gene family, the genes in all extant teleosts that belong to the family and the predicted post-duplication chromosome (1a, 1b, 2a...).
 
 ## Usage
 
-All dependencies are listed in `envs/fish_atlas.yaml` (mainly snakemake, ete3, matpotlib and seaborn).
+All dependencies are listed in `envs/fish_atlas.yaml` and include mainly snakemake, ete3, matpotlib and seaborn. You can install the dependencies directly with conda, as explained below, or manually install the packages listed in `envs/fish_atlas.yaml` before running FishAtlas.
 
 ### FishAtlas on example data
 
-- Create the conda environment (this may take a few minutes):
+- Create the conda environment:
 ```
 conda install mamba
 mamba env create -f envs/fish_atlas.yaml
@@ -37,10 +40,13 @@ mamba env create -f envs/fish_atlas.yaml
 conda activate fish_atlas
 ```
 
-- Run on toy example data:
+- Run on toy example data (~ 5 minutes):
 ```
 snakemake --configfile config_example.yaml --cores 4
 ```
+
+The output file `out_example/comparative_atlas.tsv` will be generated, along with figures with genomic annotations and statistics in `out_example/figures`.
+
 
 - Generate a snakemake report after a run:
 
@@ -48,9 +54,12 @@ snakemake --configfile config_example.yaml --cores 4
 snakemake --configfile config_example.yaml --report report_example.html
 ```
 
+The snakemake report `report_example.html` will be generated.
+
+
 ### FishAtlas on user-defined data
 
-To run on a user-defined dataset, create a new config file and format your input data following the provided example.
+To run on a user-defined dataset, create a new configuration file and format your input data following the provided example.
 
 ## Authors
 
