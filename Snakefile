@@ -190,7 +190,7 @@ if "comparisons" in config:
         input: stats = f'{OUT}/out_stats.txt',
 
         output: boxplots = report(f'{OUT}/figures/box_stats.svg', category="Annotation statistics"),
-                sptree = report(f'{OUT}/figures/sptree_stats.svg', category="Annotation statistics")
+                sptree = report(f'{OUT}/figures/sptree_stats.pdf', category="Annotation statistics")
                        
         shell:
             "python src/draw_species_tree_stats.py -i {input.stats} {config[comparisons]} "
