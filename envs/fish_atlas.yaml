@@ -1,4 +1,4 @@
-name: paralogy_map
+name: fish_atlas
 
 channels:
   - conda-forge
@@ -7,15 +7,12 @@ channels:
 
 dependencies:
   - ete3=3.1.1
-  - hmmlearn=0.2.0
   - lxml=4.4.1
   - matplotlib=3.1.1
-  - numpy
+  - pandas=0.24.2
   - pyqt=5.9.2
   - python=3.6.8
   - qt=5.9.7
-  - scikit-learn=0.18
-  - scipy=0.18
   - seaborn=0.9.0
   - six=1.12.0
   - snakemake=5.13

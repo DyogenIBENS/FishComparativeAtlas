@@ -1,6 +1,7 @@
 .snakemake/
 PM_*/
 pm*/
+out*/
 *__pycache__/
 *.pyc
 interval_conversion/
