@@ -28,7 +28,7 @@ The generated fish comparative atlas is provided in a tab-delimited file with 3 
 
 ## Usage
 
-All dependencies are listed in `envs/fish_atlas.yaml` and include mainly snakemake, ete3, matpotlib and seaborn. You can install the dependencies directly with conda, as explained below, or manually install the packages listed in `envs/fish_atlas.yaml` before running FishAtlas.
+All dependencies are listed in `envs/fish_atlas.yaml` and include mainly python 3.6, snakemake, ete3, matpotlib and seaborn. You can install the dependencies directly with conda, as explained below, or manually install the packages listed in `envs/fish_atlas.yaml` before running FishAtlas.
 
 ### FishAtlas on example data
 
