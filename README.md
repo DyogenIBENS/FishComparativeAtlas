@@ -1,11 +1,11 @@
-# FishAtlas: WGD-duplicated regions in teleost genomes
+# FishComparativeAtlas: WGD-duplicated regions in teleost genomes
 
  [![Snakemake](https://img.shields.io/badge/snakemake-≥5.13-brightgreen.svg)](https://snakemake.bitbucket.io) ![Snakemake-Report](https://img.shields.io/badge/snakemake-report-green.svg)
 
 
-FishAtlas is a snakemake pipeline to trace the evolution of sister duplicated chromosomes derived from whole genome duplication (WGD) in teleost genomes.
+FishComparativeAtlas is a snakemake pipeline to trace the evolution of sister duplicated chromosomes derived from whole genome duplication (WGD) in teleost genomes.
 
-If you use FishAtlas, please cite [ref](TODO).
+If you use FishComparativeAtlas, please cite [ref](TODO).
 
 ## Table of content
 
@@ -18,7 +18,7 @@ If you use FishAtlas, please cite [ref](TODO).
 
 ## Description
 
-FishAtlas takes as input:
+FishComparativeAtlas takes as input:
    1. ancestral chromosomes (pre-TGD) mapped on a subset of 4 teleost genomes (see the [examples](data/MacrosyntenyTGD/), taken from [Nakatani and McLysaght 2017](https://academic.oup.com/bioinformatics/article/33/14/i369/3953974)),
    2. genes coordinates files for all studied teleosts (see the [examples](data/example/genes/)),
    3. gene trees with the genes of all studied teleosts and outgroups (see the [example](data/example/SCORPiOs_ens89_corrected_forest.nhx)),
@@ -28,9 +28,9 @@ The generated fish comparative atlas is provided in a tab-delimited file with 3 
 
 ## Usage
 
-All dependencies are listed in `envs/fish_atlas.yaml` and include mainly python 3.6, snakemake, ete3, matpotlib and seaborn. You can install the dependencies directly with conda, as explained below, or manually install the packages listed in `envs/fish_atlas.yaml` before running FishAtlas.
+All dependencies are listed in `envs/fish_atlas.yaml` and include mainly python 3.6, snakemake, ete3, matpotlib and seaborn. You can install the dependencies directly with conda, as explained below, or manually install the packages listed in `envs/fish_atlas.yaml` before running FishComparativeAtlas.
 
-### FishAtlas on example data
+### FishComparativeAtlas on example data
 
 - Create the conda environment:
 ```
@@ -60,7 +60,7 @@ snakemake --configfile config_example.yaml --report report_example.html
 The snakemake report `report_example.html` will be generated.
 
 
-### FishAtlas on user-defined data
+### FishComparativeAtlas on user-defined data
 
 To run on a user-defined dataset, create a new configuration file and format your input data following the provided example.
 
@@ -80,6 +80,6 @@ This code may be freely distributed and modified under the terms of the GNU Gene
 
 ## References
 
-FishAtlas takes as input the pre-TGD ancestral chromosomes predictions from:
+FishComparativeAtlas takes as input the pre-TGD ancestral chromosomes predictions from:
 
 - [Nakatani and McLysaght 2017](https://academic.oup.com/bioinformatics/article/33/14/i369/3953974): Nakatani Y, McLysaght A. 2017. Genomes as documents of evolutionary history: a probabilistic macrosynteny model for the reconstruction of ancestral genomes. Bioinformatics 33:i369–i378.
