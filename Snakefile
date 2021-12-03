@@ -3,13 +3,6 @@ import os
 
 from src import speciestree as spt
 
-#################################################################################################
-#Runs in the conda env paralogy_map + path to SCORPiOs scripts should be appended to python path #
-#Dependencies (see env file) = snakemake, ete3, matpotlib and seaborn                            #
-#################################################################################################
-
-#TODO relocalize data
-
 DUPLICATED_SPECIES = spt.get_species(config["species_tree"], config["ancestor"])
 config["prune_ancestor"] = config.get("prune_ancestor", "Neopterygii")
 REF_SPECIES = ["Oryzias.latipes", "Gasterosteus.aculeatus", "Tetraodon.nigroviridis", "Danio.rerio"]
