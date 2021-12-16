@@ -1,6 +1,8 @@
 # FishComparativeAtlas: WGD-duplicated regions in teleost genomes
 
- [![Snakemake](https://img.shields.io/badge/snakemake-≥5.13-brightgreen.svg)](https://snakemake.bitbucket.io) ![Snakemake-Report](https://img.shields.io/badge/snakemake-report-green.svg)
+ 
+
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.5776772.svg)](https://doi.org/10.5281/zenodo.5776772) [![Snakemake](https://img.shields.io/badge/snakemake-≥5.13-brightgreen.svg)](https://snakemake.bitbucket.io) ![Snakemake-Report](https://img.shields.io/badge/snakemake-report-green.svg)
 
 
 FishComparativeAtlas is a snakemake pipeline to trace the evolution of sister duplicated chromosomes derived from whole genome duplication (WGD) in teleost genomes.
