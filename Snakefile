@@ -12,7 +12,8 @@ from src import speciestree as spt
 
 DUPLICATED_SPECIES = spt.get_species(config["species_tree"], config["ancestor"])
 config["prune_ancestor"] = config.get("prune_ancestor", "Neopterygii")
-REF_SPECIES = ["Oryzias.latipes", "Gasterosteus.aculeatus", "Tetraodon.nigroviridis", "Danio.rerio"]
+REF_SPECIES = config.get("ref_species", "Oryzias.latipes,Gasterosteus.aculeatus,Tetraodon.nigroviridis,Danio.rerio")
+REF_SPECIES = REF_SPECIES.split(',')
 
 assert "pre_dup_segments" in config, 'the pre_dup_segments arg is required'
 SEGMENTS = config["pre_dup_segments"]
