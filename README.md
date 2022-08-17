@@ -9,7 +9,7 @@ FishComparativeAtlas is a snakemake pipeline to trace the evolution of sister du
 
 If you use FishComparativeAtlas, please cite:
 
-Parey E, Louis A, Monfort J, Guiguen Y, Roest Crollius H, Berthelot C. 2022. An atlas of fish genome evolution reveals delayed rediploidization following the teleost whole-genome duplication. Available from: [https://genome.cshlp.org/content/early/2022/08/12/gr.276953.122](https://genome.cshlp.org/content/early/2022/08/12/gr.276953.122).
+Parey E, Louis A, Monfort J, Guiguen Y, Roest Crollius H, Berthelot C. 2022. [An atlas of fish genome evolution reveals delayed rediploidization following the teleost whole-genome duplication.](https://genome.cshlp.org/content/early/2022/08/12/gr.276953.122) Genome Research. August 12, 2022. 
 
 ## Table of content
 
