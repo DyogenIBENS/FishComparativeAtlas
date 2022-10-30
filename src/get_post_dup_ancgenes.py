@@ -99,7 +99,7 @@ def read_multiple_objects(file_object, sep="//"):
 
 
 def write_post_dup_ancgenes(input_forest, duplicated_species, out, outgr=None, ancg="ancGene_TGD_",
-                            add_sp_names=False, root_check=None):
+                            add_sp_names=False, root_check=None, sp_overlap_rec=False):
 
     """
     Browses input gene trees and writes an ancGenes file with post-duplication ancestral genes and
@@ -178,7 +178,7 @@ def write_post_dup_ancgenes(input_forest, duplicated_species, out, outgr=None, a
                     ortho = '\t'+'\t'.join(orthologs.values())
                 if hasattr(subtree, "D"):
 
-                    if subtree.D == 'Y':
+                    if (not sp_overlap_rec and subtree.D == 'Y') or (sp_overlap_rec and not is_speciation(subtree)):
 
                         for post_dup_group in subtree.children:
 
@@ -228,6 +228,9 @@ if __name__ == '__main__':
     PARSER.add_argument('--check_root', action='store_true',
                         help="Check that tree is rooted above teleost to include it in ancGenes.")
 
+    PARSER.add_argument('--sp_overlap', action='store_true',
+                        help="Use species overlap reconciliation (when species tree is not known)")
+
     ARGS = vars(PARSER.parse_args())
 
     #Study species
@@ -240,4 +243,4 @@ if __name__ == '__main__':
         # print(ROOTS_OK)
 
     write_post_dup_ancgenes(ARGS["treesFile"], DUP_SPECIES, ARGS["outfile"], ARGS["outgr_ortho"],
-                            add_sp_names=ARGS["add_sp"], root_check=ROOTS_OK)
+                            add_sp_names=ARGS["add_sp"], root_check=ROOTS_OK, sp_overlap_rec=ARGS["sp_overlap"])
